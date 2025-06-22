@@ -8,8 +8,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from config_cli_gui.config_framework import DocumentationGenerator
-from example_project.config.config import ConfigParameterManager
+from config_cli_gui.docs_generator import DocumentationGenerator
+from tests.example_project.config.config import ConfigParameterManager
 
 
 class TestGenericCLI(unittest.TestCase):
@@ -26,9 +26,7 @@ class TestGenericCLI(unittest.TestCase):
 
         # Default config for testing
         self.configManager = ConfigParameterManager()
-        self.default_cli_config = {
-            name: field.default for name, field in self.configManager.get_cli_category()
-        }
+        self.default_cli_config = self.configManager.to_dict()["cli"]
 
     def tearDown(self):
         """Clean up after each test method."""
@@ -46,7 +44,7 @@ class TestGenericCLI(unittest.TestCase):
         )
 
         # Validate each parameter
-        for param in self.configManager.get_cli_category().get_parameters():
+        for param in self.configManager.get_cli_parameters():
             with self.subTest(parameter=param.name):
                 self.assertIsInstance(param.name, str)
                 self.assertIsInstance(param.type_, type)
@@ -91,9 +89,7 @@ class TestGenericCLI(unittest.TestCase):
         """Test parameter choices validation."""
         # Find parameters with choices
         choice_params = [
-            param
-            for param in self.configManager.get_cli_category().get_parameters()
-            if param.choices
+            param for param in self.configManager.get_cli_parameters() if param.choices
         ]
 
         for param in choice_params:

@@ -18,9 +18,9 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 from config_cli_gui.gui_generator import SettingsDialogGenerator
-from example_project.config.config import ConfigParameterManager
-from example_project.core.base import BaseGPXProcessor
-from example_project.core.logging import (
+from tests.example_project.config.config import ConfigParameterManager
+from tests.example_project.core.base import BaseGPXProcessor
+from tests.example_project.core.logging import (
     connect_gui_logging,
     disconnect_gui_logging,
     get_logger,

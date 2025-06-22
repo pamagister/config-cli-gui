@@ -4,12 +4,46 @@
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from textwrap import dedent
 from typing import Any
 
 import yaml
 from pydantic import BaseModel
+
+
+class Color:
+    """Simple color class for RGB values."""
+
+    def __init__(self, r: int = 0, g: int = 0, b: int = 0):
+        self.r = max(0, min(255, r))
+        self.g = max(0, min(255, g))
+        self.b = max(0, min(255, b))
+
+    def to_list(self) -> list[int]:
+        return [self.r, self.g, self.b]
+
+    def to_hex(self) -> str:
+        return f"#{self.r:02x}{self.g:02x}{self.b:02x}"
+
+    @classmethod
+    def from_list(cls, rgb_list: list[int]) -> "Color":
+        if len(rgb_list) >= 3:
+            return cls(rgb_list[0], rgb_list[1], rgb_list[2])
+        return cls()
+
+    @classmethod
+    def from_hex(cls, hex_color: str) -> "Color":
+        hex_color = hex_color.lstrip("#")
+        if len(hex_color) == 6:
+            return cls(int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16))
+        return cls()
+
+    def __str__(self):
+        return self.to_hex()
+
+    def __repr__(self):
+        return f"Color({self.r}, {self.g}, {self.b})"
 
 
 @dataclass
@@ -18,18 +52,23 @@ class ConfigParameter:
 
     name: str
     default: Any
-    type_: type
-    choices: list[str | bool] = None
+    choices: list | tuple | None = None
     help: str = ""
     cli_arg: str = None
     required: bool = False
+    is_cli: bool = False
     category: str = "general"
 
     def __post_init__(self):
-        if self.cli_arg is None and not self.required:
+        if self.is_cli and self.cli_arg is None and not self.required:
             self.cli_arg = f"--{self.name}"
-        if self.type_ is bool and self.choices is None:
+        if isinstance(self.default, bool) and self.choices is None:
             self.choices = [True, False]
+
+    @property
+    def type_(self) -> type:
+        """Get the type from the default value."""
+        return type(self.default)
 
 
 class BaseConfigCategory(BaseModel, ABC):
@@ -51,13 +90,6 @@ class BaseConfigCategory(BaseModel, ABC):
         return parameters
 
 
-class CliConfigCategory(BaseConfigCategory):
-    """Base class for CLI-specific configuration parameters."""
-
-    def get_category_name(self) -> str:
-        return "cli"
-
-
 class ConfigManager:
     """Generic configuration manager that can handle multiple configuration categories."""
 
@@ -69,7 +101,6 @@ class ConfigManager:
             **kwargs: Override parameters in format category__parameter
         """
         self._categories: dict[str, BaseConfigCategory] = {}
-        self._cli_category_name: str = None
 
         # Load from file if provided
         if config_file:
@@ -82,22 +113,14 @@ class ConfigManager:
         """Add a configuration category.
 
         Args:
-            name: Name of the category (e.g., 'cli', 'app', 'gui')
+            name: Name of the category (e.g., 'app', 'database', 'gui')
             category: Configuration category instance
         """
         self._categories[name] = category
-        if isinstance(category, CliConfigCategory):
-            self._cli_category_name = name
 
     def get_category(self, name: str) -> BaseConfigCategory:
         """Get a configuration category by name."""
         return self._categories.get(name)
-
-    def get_cli_category(self) -> BaseConfigCategory | None:
-        """Get the CLI configuration category."""
-        if self._cli_category_name:
-            return self._categories[self._cli_category_name]
-        return None
 
     def _apply_kwargs(self, kwargs: dict[str, Any]):
         """Apply keyword arguments to override configuration values."""
@@ -131,7 +154,15 @@ class ConfigManager:
                     if hasattr(category, param_name):
                         param = getattr(category, param_name)
                         if isinstance(param, ConfigParameter):
-                            param.default = param_value
+                            # Handle special types
+                            if isinstance(param.default, Color) and isinstance(param_value, list):
+                                param.default = Color.from_list(param_value)
+                            elif isinstance(param.default, Path):
+                                param.default = Path(param_value)
+                            elif isinstance(param.default, datetime):
+                                param.default = datetime.fromisoformat(param_value)
+                            else:
+                                param.default = param_value
 
     def save_to_file(self, config_file: str, format_: str = "auto"):
         """Save current configuration to file."""
@@ -157,7 +188,15 @@ class ConfigManager:
         for category_name, category in self._categories.items():
             category_dict = {}
             for param in category.get_parameters():
-                category_dict[param.name] = param.default
+                value = param.default
+                # Handle special types for serialization
+                if isinstance(value, Color):
+                    value = value.to_list()
+                elif isinstance(value, Path):
+                    value = str(value)
+                elif isinstance(value, datetime):
+                    value = value.isoformat()
+                category_dict[param.name] = value
             result[category_name] = category_dict
         return result
 
@@ -169,194 +208,10 @@ class ConfigManager:
         return parameters
 
     def get_cli_parameters(self) -> list[ConfigParameter]:
-        """Get only CLI parameters."""
-        cli_category = self.get_cli_category()
-        if cli_category:
-            return cli_category.get_parameters()
-        return []
-
-
-class DocumentationGenerator:
-    """Generates documentation and configuration files from ConfigManager."""
-
-    def __init__(self, config_manager: ConfigManager):
-        self.config_manager = config_manager
-
-    def generate_config_markdown_doc(self, output_file: str):
-        """Generate Markdown documentation for all configuration parameters."""
-
-        def pad(s, width):
-            return s + " " * (width - len(s))
-
-        markdown_content = dedent("""
-            # Configuration Parameters
-
-            These parameters are available to configure the behavior of your application.
-            The parameters in the cli category can be accessed via the command line interface.
-
-            """).lstrip()
-
-        for category_name, category in self.config_manager._categories.items():
-            markdown_content += f'## Category "{category_name}"\n\n'
-
-            # Collect all parameters for this category
-            rows = []
-            header = ["Name", "Type", "Description", "Default", "Choices"]
-
+        """Get parameters that are CLI-enabled."""
+        cli_parameters = []
+        for category in self._categories.values():
             for param in category.get_parameters():
-                name = param.name
-                typ = param.type_.__name__
-                desc = param.help
-                default = repr(param.default)
-                choices = str(param.choices) if param.choices else "-"
-
-                rows.append((name, typ, desc, default, choices))
-
-            if not rows:
-                continue
-
-            # Calculate column widths
-            all_rows = [header] + rows
-            widths = [max(len(str(col)) for col in column) for column in zip(*all_rows)]
-
-            # Create Markdown table
-            table = (
-                "| "
-                + " | ".join(pad(h, w) for h, w in zip(header, widths))
-                + " |\n"
-                + "|-"
-                + "-|-".join("-" * w for w in widths)
-                + "-|\n"
-            )
-            for row in rows:
-                table += "| " + " | ".join(pad(str(col), w) for col, w in zip(row, widths)) + " |\n"
-
-            markdown_content += table + "\n"
-
-        # Write to file
-        Path(output_file).parent.mkdir(parents=True, exist_ok=True)
-        with open(output_file, "w", encoding="utf-8") as f:
-            f.write(markdown_content)
-
-    def generate_default_config_file(self, output_file: str):
-        """Generate a default configuration file with all parameters and descriptions."""
-        output_path = Path(output_file)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write("# Configuration File\n")
-            f.write("# This file was auto-generated. Modify as needed.\n\n")
-
-            for category_name, category in self.config_manager._categories.items():
-                f.write(f"# {category_name.upper()} Configuration\n")
-                f.write(f"{category_name}:\n")
-
-                for param in category.get_parameters():
-                    f.write(f"  # {param.help}\n")
-                    if param.choices:
-                        f.write(f"  # Choices: {param.choices}\n")
-                    f.write(f"  # Type: {param.type_.__name__}\n")
-                    f.write(f"  {param.name}: {repr(param.default)}\n\n")
-
-                f.write("\n")
-
-    def generate_cli_markdown_doc(self, output_file: str, app_name: str = "app"):
-        """Generate Markdown CLI documentation."""
-        cli_params = self.config_manager.get_cli_parameters()
-
-        if not cli_params:
-            return
-
-        rows = []
-        required_params = []
-        optional_params = []
-
-        for param in cli_params:
-            cli_arg = f"`--{param.name}`" if not param.required else f"`{param.name}`"
-            typ = param.type_.__name__
-            desc = param.help
-            default = (
-                "*required*"
-                if param.required or param.default in (None, "")
-                else repr(param.default)
-            )
-            choices = str(param.choices) if param.choices else "-"
-
-            rows.append((cli_arg, typ, desc, default, choices))
-            if default == "*required*":
-                required_params.append(param)
-            else:
-                optional_params.append(param)
-
-        # Generate table
-        def pad(s, width):
-            return s + " " * (width - len(s))
-
-        widths = [max(len(str(col)) for col in column) for column in zip(*rows)]
-        header = ["Option", "Type", "Description", "Default", "Choices"]
-
-        table = (
-            "| "
-            + " | ".join(pad(h, w) for h, w in zip(header, widths))
-            + " |\n"
-            + "|-"
-            + "-|-".join("-" * w for w in widths)
-            + "-|\n"
-        )
-        for row in rows:
-            table += "| " + " | ".join(pad(str(col), w) for col, w in zip(row, widths)) + " |\n"
-
-        # Generate examples
-        examples = []
-        required_arg = required_params[0].name if required_params else "example.input"
-
-        examples.append(
-            dedent(
-                f"""
-            ### 1. Basic usage
-
-            ```bash
-            python -m {app_name} {required_arg}
-            ```
-            """
-            )
-        )
-
-        # Add more examples with optional parameters
-        for i, param in enumerate(optional_params[:3], 2):
-            if param.name in ["verbose", "quiet"]:
-                continue
-            example_value = param.choices[0] if param.choices else param.default
-            examples.append(
-                dedent(f"""
-                ### {i}. With {param.name} parameter
-
-                ```bash
-                python -m {app_name} --{param.name} {example_value} {required_arg}
-                ```
-                """)
-            )
-
-        markdown = dedent(
-            f"""
-            # Command Line Interface
-
-Command line options for {app_name}
-
-```bash
-python -m {app_name} [OPTIONS] {required_arg if required_params else ""}
-```
-
-## Options
-
-{table}
-
-## Examples
-
-            {"".join(examples)}
-            """
-        ).strip()
-
-        Path(output_file).parent.mkdir(parents=True, exist_ok=True)
-        with open(output_file, "w", encoding="utf-8") as f:
-            f.write(markdown)
+                if param.is_cli:
+                    cli_parameters.append(param)
+        return cli_parameters
