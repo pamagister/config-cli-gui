@@ -8,8 +8,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from example_project.config.config import ConfigParameterManager
 from config_cli_gui.config_framework import DocumentationGenerator
+from example_project.config.config import ConfigParameterManager
 
 
 class TestGenericCLI(unittest.TestCase):
