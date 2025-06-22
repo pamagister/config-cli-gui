@@ -17,15 +17,15 @@ from functools import partial
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
-from config_cli_gui.config.config import ConfigParameterManager
-from config_cli_gui.core.base import BaseGPXProcessor
-from config_cli_gui.core.logging import (
+from config_cli_gui.gui_generator import SettingsDialogGenerator
+from example_project.config.config import ConfigParameterManager
+from example_project.core.base import BaseGPXProcessor
+from example_project.core.logging import (
     connect_gui_logging,
     disconnect_gui_logging,
     get_logger,
     initialize_logging,
 )
-from config_cli_gui.gui_generator import SettingsDialogGenerator
 
 
 class GuiLogWriter:
