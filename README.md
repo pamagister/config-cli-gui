@@ -1,8 +1,8 @@
 <!-- This README.md is auto-generated from docs/index.md -->
 
-# Welcome to config-cli-gui
+# config-cli-gui: Unified Configuration and Interface Management
 
-A feature-rich Python project template with with auto-generated CLI, GUI and parameterized configuration.
+Provides a generic configuration framework that automatically generates both command-line interfaces and GUI settings dialogs from configuration parameters. 
 
 [![Github CI Status](https://github.com/pamagister/config-cli-gui/actions/workflows/main.yml/badge.svg)](https://github.com/pamagister/config-cli-gui/actions)
 [![GitHub release](https://img.shields.io/github/v/release/pamagister/config-cli-gui)](https://github.com/pamagister/config-cli-gui/releases)
@@ -13,159 +13,239 @@ A feature-rich Python project template with with auto-generated CLI, GUI and par
 [![Downloads](https://pepy.tech/badge/config-cli-gui)](https://pepy.tech/project/config-cli-gui/)
 
 
-This template provides a solid foundation for your next Python project, incorporating best practices for testing, automation, and distribution. It streamlines the development process with a comprehensive set of pre-configured tools and workflows, allowing you to focus on writing code.
+`config-cli-gui` is a Python library designed to streamline the management of application configurations, 
+generating command-line interfaces (CLIs), and dynamically creating graphical user interface (GUI) settings dialogs 
+from a single source of truth. It leverages Pydantic for robust parameter definition and offers 
+powerful features for consistent configuration across different application entry points.
 
 ---
 
-## How to use this template
+## 🚀 Installation
 
-Getting started on developing your own project based on this template
-
-> **DO NOT FORK** 
-> This project is meant to be used from **[Use this template](https://github.com/pamagister/config-cli-gui/generate)** feature.
-
----
-
-1. **Create a new repository using GitHub template**  
-   Click on **[Use this template](https://github.com/pamagister/config-cli-gui/generate)**.
-
-2. **Give a name to your project**  
-   For example: `my-python-project`  
-   *(Hyphens may ne used as project name; they are converted during renaming internally to underscores for packages.)*
-
-3. **Set write permissions**  
-   Go to: `Repository -> Settings -> Actions -> General -> Workflow permissions`  
-   Select: `Read and write permissions`, then click **Save**.
-
-4. **Trigger rename workflow**  
-   Navigate to `Actions` tab → Select **Rename Action** → Run workflow on the `main` branch.
-
-5. **Wait for the workflow to finish**
-
-6. **Clone the repository**  
-   Run:  
-   ```bash
-   git clone [your-github-url]
-   ```
-
-7. **Open the project in your IDE**
-
-8. **Install dependencies and create virtual environment**
-   Run:
-
-   ```bash
-   make install
-   ```
-
-9. **Configure your IDE**
-   Set `.venv` as the local Python virtual environment.
-
-10. **Adjust project metadata**
-    Modify `pyproject.toml` (e.g., project description, authors, license, etc.)
-
-11. **Clean up template scripts**
-    Delete the files:
-
-    * `rename_project.yml`
-    * `rename_project.sh`
-
-12. **Format your codebase**
-    Run:
-
-    ```bash
-    make fmt
-    ```
-
-    This will auto-format your files and reorder imports (based on any name changes).
-
-13. **Enable pre-commit hooks**
-    Run:
-
-    ```bash
-    uv run pre-commit install
-    ```
-
-14. **Add repository to ReadTheDocs**
-    Visit: [https://app.readthedocs.org/dashboard/import/](https://app.readthedocs.org/dashboard/import/)
-
-15. **Configure PyPI publishing**
-
-    * Generate a **PyPI API token** from your PyPI account.
-    * Go to **GitHub → Settings → Secrets and variables → Actions**.
-    * Add the secret as `PYPI_API_TOKEN`.
-
-16. **Release your first version**
-    Run:
-
-    ```bash
-    make release
-    ```
-    
----
-
-## Feature overview
-
-* 📦 **Package Management:** Utilizes [uv](https://docs.astral.sh/uv/getting-started/), an extremely fast Python package manager, with dependencies managed in `pyproject.toml`.
-* ✅ **Code Formatting and Linting:** Pre-commit hook with the [RUFF auto-formatter](https://docs.astral.sh/ruff/) to ensure consistent code style.
-* 🧪 **Testing:** Unit testing framework with [pytest](https://docs.pytest.org/en/latest/).
-* 📊 **Code coverage reports** using [codecov](https://about.codecov.io/sign-up/)
-* 🔄 **CI/CD:**  [GitHub Actions](https://github.com/features/actions) for automated builds (Windows, macOS), unit tests, and code checks.
-* 💾 **Automated Builds:** GitHub pipeline for automatically building a Windows executable and a macOS installer.
-* 💬 **Parameter-Driven Automation:**
-    * Automatic generation of a configuration file from parameter definitions.
-    * Automatic generation of a Command-Line Interface (CLI) from the same parameters.
-    * Automatic generation of CLI API documentation.
-    * Automatic generation of change log using **gitchangelog** to keep a HISTORY.md file up to date.
-* 📃 **Documentation:** Configuration for publishing documentation on [Read the Docs](https://about.readthedocs.com/) using [mkdocs](https://www.mkdocs.org/) .
-* 🖼️ **Minimalist GUI:** Comes with a basic GUI based on [tkinker](https://tkdocs.com/tutorial/index.html) that includes an auto-generated settings menu based on your defined parameters.
-* 🖥️ **Workflow Automation:** A `Makefile` is included to simplify and automate common development tasks.
-* 🛳️ **Release pipeline:** Automated releases unsing the Makefile `make release` command, which creates a new tag and pushes it to the remote repo. The `release` pipeline will automatically create a new release on GitHub and trigger a release on  [PyPI](https://pypi.org.
-    * **[setuptools](https://pypi.org/project/setuptools/)** is used to package the project and manage dependencies.
-    * **[setuptools-scm](https://pypi.org/project/setuptools-scm/)** is used to automatically generate the `_version.py` file from the `pyproject.toml` file.
-
----
-
-## Installation
-
-Get an impression of how your own project could be installed and look like.
-
-Download from [PyPI](https://pypi.org/).
-
-💾 For more installation options see [install](docs/getting-started/install.md).
+You can install `config-cli-gui` using pip:
 
 ```bash
 pip install config-cli-gui
-```
-
-Run GUI from command line
-
-```bash
-config-cli-gui-gui
-```
-
-Run application from command line using CLI
-
-```bash
-python -m config_cli_gui.cli [OPTIONS] path/to/file
-```
-
-```bash
-config-cli-gui-cli [OPTIONS] path/to/file
-```
+````
 
 ---
 
-## Troubleshooting
+## ✨ Features
 
-### Problems with release pipeline
+  * **Single Source of Truth**: Define all your application parameters in one place using simple, dataclass-like structures based on Pydantic's `BaseModel`. This ensures consistency and reduces errors across your application.
+  * **Categorized Configuration**: Organize your parameters into logical categories (e.g., `cli`, `app`, `gui`) for better structure and maintainability.
+  * **Dynamic CLI Generation**: Automatically generate `argparse`-compatible command-line arguments directly from your defined configuration parameters, including help texts, types, and choices.
+  * **Config File Management**: Easily load and save configurations from/to YAML or JSON files, allowing users to customize default settings.
+  * **GUI Settings Dialogs**: Dynamically create Tkinter-based settings dialogs for your application, allowing users to intuitively modify configuration parameters via a graphical interface.
+  * **Documentation Generation**: Generate detailed Markdown documentation for both your CLI options and all configuration parameters, keeping your user guides always up-to-date with your codebase.
+  * **Override System**: Supports robust overriding of configuration values via configuration files and command-line arguments, with clear precedence.
 
-If you get this error below:
-```bash
-/home/runner/work/_temp/xxxx_xxx.sh: line 1: .github/release_message.sh: Permission denied
+---
+
+## 📚 Usage
+
+### 1\. Define Your Configuration
+
+Start by defining your application's configuration parameters in a central `config.py` file within your project. You will inherit from `config-cli-gui`'s `GenericConfigManager` and `BaseConfigCategory`.
+
+```python
+# my_project/config.py
+from config_cli_gui.config import ConfigParameter, GenericConfigManager, BaseConfigCategory
+from pydantic import Field # Make sure pydantic is installed
+
+class MyCliConfig(BaseConfigCategory):
+    """CLI-specific parameters for MyProject."""
+    input_path: ConfigParameter = ConfigParameter(
+        name="input_path",
+        default="",
+        type_=str,
+        help="Path to the input file or directory",
+        required=True,
+        cli_arg=None # Positional argument
+    )
+    output_dir: ConfigParameter = ConfigParameter(
+        name="output_dir",
+        default="./output",
+        type_=str,
+        help="Directory for output files",
+        cli_arg="--output"
+    )
+    dry_run: ConfigParameter = ConfigParameter(
+        name="dry_run",
+        default=False,
+        type_=bool,
+        help="Perform a dry run without making actual changes",
+        cli_arg="--dry-run"
+    )
+
+class MyAppConfig(BaseConfigCategory):
+    """Application-wide settings."""
+    log_level: ConfigParameter = ConfigParameter(
+        name="log_level",
+        default="INFO",
+        type_=str,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        help="Logging verbosity level"
+    )
+    max_threads: ConfigParameter = ConfigParameter(
+        name="max_threads",
+        default=4,
+        type_=int,
+        help="Maximum number of processing threads"
+    )
+
+class MyGuiConfig(BaseConfigCategory):
+    """GUI-specific settings."""
+    theme: ConfigParameter = ConfigParameter(
+        name="theme",
+        default="dark",
+        type_=str,
+        choices=["light", "dark", "system"],
+        help="GUI theme"
+    )
+    window_size: ConfigParameter = ConfigParameter(
+        name="window_size",
+        default="800x600",
+        type_=str,
+        help="Initial GUI window size"
+    )
+
+class ProjectConfigManager(GenericConfigManager):
+    """Main configuration manager for MyProject."""
+    cli: MyCliConfig = Field(default_factory=MyCliConfig)
+    app: MyAppConfig = Field(default_factory=MyAppConfig)
+    gui: MyGuiConfig = Field(default_factory=MyGuiConfig)
+
+    def __init__(self, config_file: str | None = None, **kwargs):
+        # Dynamically register categories for the generic manager
+        self.__class__.add_config_category("cli", MyCliConfig)
+        self.__class__.add_config_category("app", MyAppConfig)
+        self.__class__.add_config_category("gui", MyGuiConfig)
+        super().__init__(config_file, **kwargs)
+
 ```
 
-You have to run these commands in your IDE Terminal or the git bash and then push the changes.
-```bash
-git update-index --chmod=+x ./.github/release_message.sh
+### 2\. Generate CLI
+
+Use the generic CLI functions to parse command-line arguments based on your defined `CliConfig`.
+
+```python
+# my_project/cli.py
+import argparse
+from my_project.config import ProjectConfigManager
+from config_cli_gui.cli import create_argument_parser, create_config_overrides_from_args
+
+def parse_my_args():
+    # Define any project-specific hardcoded CLI args (e.g., --version)
+    extra_cli_args = {
+        "--version": {"action": "version", "version": "MyProject 1.0.0", "help": "Show program's version number and exit."}
+    }
+
+    parser = create_argument_parser(
+        config_manager_class=ProjectConfigManager,
+        description="MyProject CLI application",
+        epilog="""
+Examples:
+  python -m my_project.cli my_input.txt --output ./results
+  python -m my_project.cli --config custom.yaml another_input.csv
+        """,
+        cli_category_name="cli", # The name of your CLI config category
+        extra_arguments=extra_cli_args
+    )
+    return parser.parse_args()
+
+def main_cli():
+    args = parse_my_args()
+
+    # Map generic flags like verbose/quiet to specific log levels if desired
+    log_level_map = {
+        "verbose": "DEBUG", # Assuming you added a --verbose flag in extra_cli_args
+        "quiet": "WARNING"  # Assuming you added a --quiet flag
+    }
+
+    cli_overrides = create_config_overrides_from_args(
+        args,
+        config_manager_class=ProjectConfigManager,
+        cli_category_name="cli",
+        log_level_map=log_level_map
+    )
+
+    # Initialize your project's configuration
+    config = ProjectConfigManager(
+        config_file=args.config if hasattr(args, "config") and args.config else None,
+        **cli_overrides
+    )
+
+    print(f"Input Path: {config.cli.input_path.default}")
+    print(f"Output Directory: {config.cli.output_dir.default}")
+    print(f"Dry Run: {config.cli.dry_run.default}")
+    print(f"Log Level: {config.app.log_level.default}")
+    # ... your application logic using 'config'
+
+if __name__ == "__main__":
+    main_cli()
 ```
 
+### 3\. Integrate GUI Settings Dialog
+
+The `SettingsDialog` from `config-cli-gui` (or your project's adapted version) can be used to easily create a settings window.
+
+```python
+# my_project/gui.py (Simplified example)
+import tkinter as tk
+from my_project.config import ProjectConfigManager
+from config_cli_gui.gui_settings import SettingsDialog # Assuming gui_settings is part of the generic lib or adapted
+
+def open_settings_window(parent_root, config_manager: ProjectConfigManager):
+    dialog = SettingsDialog(parent_root, config_manager)
+    parent_root.wait_window(dialog.dialog)
+    # After dialog closes, config_manager will have updated values if 'OK' was clicked
+    print("Settings updated or cancelled.")
+    print(f"New GUI Theme: {config_manager.gui.theme.default}")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.withdraw() # Hide main window for this example
+    
+    # Initialize your project's config manager
+    project_config = ProjectConfigManager() 
+    
+    open_settings_window(root, project_config)
+    
+    root.destroy()
+```
+
+### 4\. Generate Documentation and Default Config
+
+Use the static methods on your `ProjectConfigManager` to generate `config.yaml`, `cli.md`, and `config.md` files.
+
+```python
+# scripts/generate_docs.py (or similar script in your project)
+from my_project.config import ProjectConfigManager
+import os
+
+# Define output paths
+output_dir = "docs/generated"
+os.makedirs(output_dir, exist_ok=True)
+
+config_file_path = "config.yaml" # At the project root or similar
+cli_doc_path = os.path.join(output_dir, "cli.md")
+config_doc_path = os.path.join(output_dir, "config.md")
+
+print(f"Generating default config to: {config_file_path}")
+ProjectConfigManager.generate_default_config_file(config_file_path)
+
+print(f"Generating general config documentation to: {config_doc_path}")
+ProjectConfigManager.generate_config_markdown_doc(config_doc_path)
+
+print(f"Generating CLI documentation to: {cli_doc_path}")
+ProjectConfigManager.generate_cli_markdown_doc(
+    output_file=cli_doc_path,
+    cli_category_name="cli", # Ensure this matches your CLI config category
+    cli_entry_point="python -m my_project.cli" # Your project's actual CLI entry point
+)
+
+print("Documentation and default config generation complete.")
+```
+
+By following this structure, `config-cli-gui` provides a robust and maintainable foundation for your application's configuration needs.
