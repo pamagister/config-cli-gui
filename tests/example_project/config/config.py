@@ -5,8 +5,12 @@ organized in categories (CLI, App, GUI). It can generate config files, CLI modul
 and documentation from the parameter definitions.
 """
 
+from datetime import datetime
+from pathlib import Path
+
 from config_cli_gui.config_framework import (
     BaseConfigCategory,
+    Color,
     ConfigManager,
     ConfigParameter,
 )
@@ -159,6 +163,29 @@ class GuiConfig(BaseConfigCategory):
     )
 
 
+class MiscConfig(BaseConfigCategory):
+    def get_category_name(self) -> str:
+        return "misc"
+
+    some_file: ConfigParameter = ConfigParameter(
+        name="some_file",
+        default=Path("some_file.txt"),
+        help="Path to the file to use",
+    )
+
+    some_color: ConfigParameter = ConfigParameter(
+        name="some_color",
+        default=Color(255, 0, 0),
+        help="Color setting for the application",
+    )
+
+    some_date: ConfigParameter = ConfigParameter(
+        name="some_date",
+        default=datetime.now(),
+        help="Date setting for the application",
+    )
+
+
 class ConfigParameterManager(ConfigManager):  # Inherit from ConfigManager
     """Main configuration manager that handles all parameter categories."""
 
@@ -170,6 +197,7 @@ class ConfigParameterManager(ConfigManager):  # Inherit from ConfigManager
         self.add_category("cli", CliConfig())
         self.add_category("app", AppConfig())
         self.add_category("gui", GuiConfig())
+        self.add_category("misc", MiscConfig())
 
 
 def main():

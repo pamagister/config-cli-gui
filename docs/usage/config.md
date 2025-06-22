@@ -37,3 +37,11 @@ The parameters in the cli category can be accessed via the command line interfac
 | auto_scroll_log   | bool | Automatically scroll to newest log entries | True    | [True, False]             |
 | max_log_lines     | int  | Maximum number of log lines to keep in GUI | 1000    | -                         |
 
+## Category "misc"
+
+| Name       | Type        | Description                       | Default                                           | Choices |
+|------------|-------------|-----------------------------------|---------------------------------------------------|---------|
+| some_file  | WindowsPath | Path to the file to use           | WindowsPath('some_file.txt')                      | -       |
+| some_color | Color       | Color setting for the application | Color(255, 0, 0)                                  | -       |
+| some_date  | datetime    | Date setting for the application  | datetime.datetime(2025, 6, 23, 0, 56, 46, 576493) | -       |
+

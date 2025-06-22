@@ -94,3 +94,18 @@ gui:
   max_log_lines: 1000
 
 
+# MISC Configuration
+misc:
+  # Path to the file to use
+  # Type: WindowsPath
+  some_file: WindowsPath('some_file.txt')
+
+  # Color setting for the application
+  # Type: Color
+  some_color: Color(255, 0, 0)
+
+  # Date setting for the application
+  # Type: datetime
+  some_date: datetime.datetime(2025, 6, 23, 0, 56, 46, 576493)
+
+
