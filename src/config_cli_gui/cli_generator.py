@@ -46,6 +46,8 @@ class CliGenerator:
 
         # Generate arguments from CLI config parameters
         for param in cli_params:
+            param_type = type(param.default)
+
             if param.required and param.cli_arg is None:
                 # Positional argument
                 parser.add_argument(param.name, help=param.help)
@@ -57,17 +59,17 @@ class CliGenerator:
                 }
 
                 # Handle different parameter types
-                if param.choices and param.type_ != bool:
+                if param.choices and param_type != bool:
                     kwargs["choices"] = param.choices
 
-                if param.type_ == int:
+                if param_type == int:
                     kwargs["type"] = int
-                elif param.type_ == float:
+                elif param_type == float:
                     kwargs["type"] = float
-                elif param.type_ == bool:
+                elif param_type == bool:
                     kwargs["action"] = "store_true" if not param.default else "store_false"
                     kwargs["help"] = f"{param.help} (default: {param.default})"
-                elif param.type_ == str:
+                elif param_type == str:
                     kwargs["type"] = str
 
                 parser.add_argument(param.cli_arg, **kwargs)

@@ -302,7 +302,7 @@ class GenericSettingsDialog:
 
     def _create_parameter_widget(self, parent, param: ConfigParameter):
         """Create appropriate widget for parameter type."""
-        param_type = param.type_
+        param_type = type(param.default)
 
         # Boolean type - Checkbox
         if param_type == bool:
@@ -499,26 +499,26 @@ class GenericSettingsDialog:
                 param = getattr(category, param_name)
 
                 # Convert value to appropriate type
-                if param.type_ == bool:
+                if type(param.default) == bool:
                     overrides[key] = value
-                elif param.type_ == Path:
+                elif type(param.default) == Path:
                     overrides[key] = Path(value)
-                elif param.type_ == Color:
+                elif type(param.default) == Color:
                     overrides[key] = Color.from_hex(value)
-                elif param.type_ == datetime:
+                elif type(param.default) == datetime:
                     overrides[key] = datetime.strptime(value, "%Y-%m-%d %H:%M")
-                elif param.type_ in (list, tuple):
+                elif type(param.default) in (list, tuple):
                     # Parse comma-separated values
                     items = [item.strip() for item in value.split(",") if item.strip()]
                     overrides[key] = type(param.default)(items)
-                elif param.type_ == dict:
+                elif type(param.default) == dict:
                     # Parse JSON format
                     import json
 
                     overrides[key] = json.loads(value)
-                elif param.type_ == int:
+                elif type(param.default) == int:
                     overrides[key] = int(value)
-                elif param.type_ == float:
+                elif type(param.default) == float:
                     overrides[key] = float(value)
                 else:
                     overrides[key] = value

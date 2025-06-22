@@ -33,7 +33,7 @@ class DocumentationGenerator:
 
             for param in category.get_parameters():
                 name = param.name
-                typ = param.type_.__name__
+                typ = type(param.default).__name__
                 desc = param.help
                 default = repr(param.default)
                 choices = str(param.choices) if param.choices else "-"
@@ -83,7 +83,7 @@ class DocumentationGenerator:
                     f.write(f"  # {param.help}\n")
                     if param.choices:
                         f.write(f"  # Choices: {param.choices}\n")
-                    f.write(f"  # Type: {param.type_.__name__}\n")
+                    f.write(f"  # Type: {type(param.default).__name__}\n")
                     f.write(f"  {param.name}: {repr(param.default)}\n\n")
 
                 f.write("\n")
@@ -101,7 +101,7 @@ class DocumentationGenerator:
 
         for param in cli_params:
             cli_arg = f"`--{param.name}`" if not param.required else f"`{param.name}`"
-            typ = param.type_.__name__
+            typ = type(param.default).__name__
             desc = param.help
             default = (
                 "*required*"

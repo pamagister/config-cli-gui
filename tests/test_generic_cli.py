@@ -47,17 +47,17 @@ class TestGenericCLI(unittest.TestCase):
         for param in self.configManager.get_cli_parameters():
             with self.subTest(parameter=param.name):
                 self.assertIsInstance(param.name, str)
-                self.assertIsInstance(param.type_, type)
+                self.assertIsInstance(type(param.default), type)
                 self.assertIsInstance(param.help, str)
                 self.assertGreater(len(param.help), 0, "Help text should not be empty")
 
                 # Check if default value matches type
                 if param.default is not None and param.default != "":
-                    if param.type_ == bool:
+                    if type(param.default) == bool:
                         self.assertIsInstance(param.default, bool)
-                    elif param.type_ == int:
+                    elif type(param.default) == int:
                         self.assertIsInstance(param.default, int)
-                    elif param.type_ == str:
+                    elif type(param.default) == str:
                         self.assertIsInstance(param.default, str)
 
     def test_config_file_not_found(self):

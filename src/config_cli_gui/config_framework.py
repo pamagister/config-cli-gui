@@ -82,7 +82,7 @@ class BaseConfigCategory(BaseModel, ABC):
     def get_parameters(self) -> list[ConfigParameter]:
         """Get all ConfigParameter objects from this category."""
         parameters = []
-        for field_name in self.model_fields:
+        for field_name in self.__class__.model_fields:
             param = getattr(self, field_name)
             if isinstance(param, ConfigParameter):
                 param.category = self.get_category_name()
