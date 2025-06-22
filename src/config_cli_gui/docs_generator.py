@@ -150,8 +150,35 @@ class DocumentationGenerator:
             )
         )
 
+        # Add logging examples
+        examples.append(
+            dedent(
+                f"""
+        ### 2. With verbose logging
+
+        ```bash
+        python -m {app_name} -v {required_arg}
+        python -m {app_name} --verbose {required_arg}
+        ```
+        """
+            )
+        )
+
+        examples.append(
+            dedent(
+                f"""
+        ### 3. With quiet mode
+
+        ```bash
+        python -m {app_name} -q {required_arg}
+        python -m {app_name} --quiet {required_arg}
+        ```
+        """
+            )
+        )
+
         # Add more examples with optional parameters
-        for i, param in enumerate(optional_params[:3], 2):
+        for i, param in enumerate(optional_params[:3], 4):
             if param.name in ["verbose", "quiet"]:
                 continue
             example_value = param.choices[0] if param.choices else param.default
