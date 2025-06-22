@@ -1,4 +1,4 @@
-"""Central configuration management for python-template-project project.
+"""Central configuration management for config-cli-gui project.
 
 This module provides a single source of truth for all configuration parameters
 organized in categories (CLI, App, GUI). It can generate config files, CLI modules,

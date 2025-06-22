@@ -1,4 +1,4 @@
-"""CLI interface for python-template-project using the generic config framework.
+"""CLI interface for config-cli-gui using the generic config framework.
 
 This file uses the CliGenerator from the generic config framework.
 """
@@ -6,9 +6,9 @@ This file uses the CliGenerator from the generic config framework.
 from pathlib import Path
 
 from generic_config_cli_gui.cli_generator import CliGenerator
-from python_template_project.config.config import ConfigParameterManager
-from python_template_project.core.base import BaseGPXProcessor
-from python_template_project.core.logging import initialize_logging
+from config_cli_gui.config.config import ConfigParameterManager
+from config_cli_gui.core.base import BaseGPXProcessor
+from config_cli_gui.core.logging import initialize_logging
 
 
 def validate_config(config: ConfigParameterManager, logger) -> bool:
@@ -54,11 +54,11 @@ def run_main_processing(config: ConfigParameterManager) -> int:
     """
     # Initialize logging system
     logger_manager = initialize_logging(config)
-    logger = logger_manager.get_logger("python_template_project.cli")
+    logger = logger_manager.get_logger("config_cli_gui.cli")
 
     try:
         # Log startup information
-        logger.info("Starting python_template_project CLI")
+        logger.info("Starting config_cli_gui CLI")
         logger_manager.log_config_summary()
 
         # Validate configuration
@@ -115,7 +115,7 @@ def main():
     config_manager = ConfigParameterManager()
 
     # Create CLI generator
-    cli_generator = CliGenerator(config_manager=config_manager, app_name="python_template_project")
+    cli_generator = CliGenerator(config_manager=config_manager, app_name="config_cli_gui")
 
     # Run the CLI with our main processing function
     return cli_generator.run_cli(

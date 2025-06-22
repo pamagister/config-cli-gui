@@ -1,7 +1,7 @@
 [project]
-name = "python-template-project"
+name = "config-cli-gui"
 dynamic = ["version"]
-description = "Feature-rich Python project template designed for robustness and ease of use."
+description = "Feature-rich Python project template for config-cli-gui."
 authors = [
     {name = "pamagister"}
 ]
@@ -40,15 +40,15 @@ docs = [
 ]
 
 [project.scripts]
-python-template-project = "python_template_project.cli.cli:main"
-python-template-project-gui = "python_template_project.gui.gui:main"
+config-cli-gui = "config_cli_gui.cli.cli:main"
+config-cli-gui-gui = "config_cli_gui.gui.gui:main"
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
-write_to = "src/python_template_project/_version.py"
+write_to = "src/config_cli_gui/_version.py"
 
 [tool.deptry]
 pep621_dev_dependency_groups = ["dev", "docs"]
@@ -56,7 +56,7 @@ pep621_dev_dependency_groups = ["dev", "docs"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
-exclude = ["src/python_template_project/_version.py"]
+exclude = ["src/config_cli_gui/_version.py"]
 
 [tool.ruff.lint]
 select = [

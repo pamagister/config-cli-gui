@@ -58,28 +58,28 @@ test: lint        ## Run tests and generate coverage report.
 .PHONY: build-win
 build-win:    ## Build the Windows executable.
 	echo "Building unified CLI/GUI application"
-	uv run pyinstaller --onefile src/main.py --name python-template-project --add-data "config.yaml;." --hidden-import python_template_project.cli.cli --hidden-import python_template_project.gui.gui
+	uv run pyinstaller --onefile src/main.py --name config-cli-gui --add-data "config.yaml;." --hidden-import config_cli_gui.cli.cli --hidden-import config_cli_gui.gui.gui
 	rm -rf release
 	mkdir release
-	cp dist/python-template-project.exe release
+	cp dist/config-cli-gui.exe release
 	cp config.yaml release
 	cp README.md release
 
 .PHONY: build-macos
 build-macos:    ## Build the macOS executable.
 	echo "Building unified CLI/GUI application as executable"
-	uv run pyinstaller --onefile src/main.py --name python-template-project --add-data "config.yaml:." --hidden-import python_template_project.cli.cli --hidden-import python_template_project.gui.gui
+	uv run pyinstaller --onefile src/main.py --name config-cli-gui --add-data "config.yaml:." --hidden-import config_cli_gui.cli.cli --hidden-import config_cli_gui.gui.gui
 
 	echo "Building unified CLI/GUI application as .app bundle"
 	# --windowed is important to hide the console for GUI mode
 	# The name "TemplateApp" becomes the name of the .app
-	uv run pyinstaller --windowed --name "TemplateApp" src/main.py --add-data "config.yaml:." --hidden-import python_template_project.cli.cli --hidden-import python_template_project.gui.gui
+	uv run pyinstaller --windowed --name "TemplateApp" src/main.py --add-data "config.yaml:." --hidden-import config_cli_gui.cli.cli --hidden-import config_cli_gui.gui.gui
 
 	# Prepare ZIP file for release
 	rm -rf release
 	mkdir release
 	echo "Copy the CLI/GUI executable"
-	cp dist/python-template-project release/
+	cp dist/config-cli-gui release/
 	echo "Copy the .app bundle (directory) recursively"
 	cp -R "dist/TemplateApp.app" release/
 	echo "Copy configuration and documentation"

@@ -824,7 +824,7 @@ wheels = [
 ]
 
 [[package]]
-name = "python-template-project"
+name = "config-cli-gui"
 source = { editable = "." }
 dependencies = [
     { name = "fastkml" },
