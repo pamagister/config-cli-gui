@@ -1,4 +1,6 @@
-# config-cli-gui: Unified Configuration and Interface Management
+# Welcome to config-cli-gui
+
+**Unified Configuration and Interface Management**
 
 Provides a generic configuration framework that automatically generates both command-line interfaces and GUI settings dialogs from configuration parameters. 
 
@@ -24,7 +26,7 @@ You can install `config-cli-gui` using pip:
 
 ```bash
 pip install config-cli-gui
-````
+```
 
 ---
 
