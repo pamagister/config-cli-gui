@@ -4,7 +4,7 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from generic_config_cli_gui.config_framework import ConfigManager, ConfigParameter
+from config_cli_gui.config_framework import ConfigManager, ConfigParameter
 
 
 class ToolTip:

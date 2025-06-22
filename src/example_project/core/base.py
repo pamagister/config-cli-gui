@@ -94,32 +94,6 @@ class BaseGPXProcessor:
         self.logger.warning(f"SRTM elevation data unavailable: {error_msg}")
         self.logger.info("Checking for network/firewall issues...")
 
-        # Import and use firewall handler
-        try:
-            from firewall_handler import FirewallHandler
-
-            firewall_handler = FirewallHandler(logger=self.logger)
-
-            if not firewall_handler.check_network_access():
-                self.logger.warning("Network access appears to be blocked.")
-                firewall_handler.handle_firewall_issue()
-            else:
-                self.logger.info(
-                    "Network access seems available. SRTM issue may be service-related."
-                )
-
-        except ImportError:
-            self.logger.warning(
-                "FirewallHandler not available. Continuing without network diagnostics."
-            )
-        except Exception as e:
-            self.logger.error(f"Error during firewall check: {e}")
-            self.logger.debug(f"Full traceback:\n{traceback.format_exc()}")
-
-        self.logger.info(
-            "Continuing in offline mode - using original elevation data from GPX files."
-        )
-
     def _get_output_folder(self) -> Path:
         """Get the output folder path, create if not exists."""
         if self.output:

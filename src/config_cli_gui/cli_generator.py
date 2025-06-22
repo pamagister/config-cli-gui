@@ -1,4 +1,4 @@
-# generic_config_cli_gui/cli.py
+# config_cli_gui/cli.py
 """Generic CLI generator for configuration framework."""
 
 import argparse
@@ -6,7 +6,7 @@ import traceback
 from collections.abc import Callable
 from typing import Any
 
-from generic_config_cli_gui.config_framework import ConfigManager
+from config_cli_gui.config_framework import ConfigManager
 
 
 class CliGenerator:

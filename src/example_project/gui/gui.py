@@ -17,7 +17,6 @@ from functools import partial
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
-from generic_config_cli_gui.gui_generator import SettingsDialogGenerator
 from config_cli_gui.config.config import ConfigParameterManager
 from config_cli_gui.core.base import BaseGPXProcessor
 from config_cli_gui.core.logging import (
@@ -26,6 +25,7 @@ from config_cli_gui.core.logging import (
     get_logger,
     initialize_logging,
 )
+from config_cli_gui.gui_generator import SettingsDialogGenerator
 
 
 class GuiLogWriter:
