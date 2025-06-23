@@ -39,9 +39,9 @@ The parameters in the cli category can be accessed via the command line interfac
 
 ## Category "misc"
 
-| Name       | Type        | Description                       | Default                                           | Choices |
-|------------|-------------|-----------------------------------|---------------------------------------------------|---------|
-| some_file  | WindowsPath | Path to the file to use           | WindowsPath('some_file.txt')                      | -       |
-| some_color | Color       | Color setting for the application | Color(255, 0, 0)                                  | -       |
-| some_date  | datetime    | Date setting for the application  | datetime.datetime(2025, 6, 23, 0, 56, 46, 576493) | -       |
+| Name       | Type        | Description                       | Default                                            | Choices |
+|------------|-------------|-----------------------------------|----------------------------------------------------|---------|
+| some_file  | WindowsPath | Path to the file to use           | WindowsPath('some_file.txt')                       | -       |
+| some_color | Color       | Color setting for the application | Color(255, 0, 0)                                   | -       |
+| some_date  | datetime    | Date setting for the application  | datetime.datetime(2025, 6, 23, 18, 58, 52, 946103) | -       |
 

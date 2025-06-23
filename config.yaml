@@ -18,12 +18,12 @@ app:
 cli:
   # Include elevation data in waypoints | type=ConfigParameter, default=True
   elevation: true
-  # Extract starting points of each track as waypoint | type=ConfigParameter, default=False
-  extract_waypoints: false
+  # Extract starting points of each track as waypoint | type=ConfigParameter, default=True
+  extract_waypoints: true
   # Path to input (file or folder) | type=ConfigParameter, default=
   input: ''
-  # Maximum distance between two waypoints | type=ConfigParameter, default=21
-  min_dist: 21
+  # Maximum distance between two waypoints | type=ConfigParameter, default=20
+  min_dist: 20
   # Path to output destination | type=ConfigParameter, default=
   output: ''
 gui:
@@ -40,9 +40,12 @@ gui:
   # Default window width | type=ConfigParameter, default=800
   window_width: 800
 misc:
+  # Color setting for the application | type=ConfigParameter, default=#ff0000
   some_color:
-  - 50
-  - 139
-  - 205
-  some_date: '2025-06-23T18:08:00'
+  - 255
+  - 0
+  - 0
+  # Date setting for the application | type=ConfigParameter, default=2025-06-23 18:58:52.946103
+  some_date: '2025-06-23T18:58:52.946103'
+  # Path to the file to use | type=ConfigParameter, default=some_file.txt
   some_file: some_file.txt

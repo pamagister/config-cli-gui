@@ -62,6 +62,11 @@ class ConfigParameter:
         if isinstance(self.default, bool) and self.choices is None:
             self.choices = [True, False]
 
+    @property
+    def type_(self) -> type:
+        """Get the type from the default value."""
+        return type(self.default)
+
 
 class BaseConfigCategory(BaseModel, ABC):
     """Base class for configuration categories."""
@@ -247,17 +252,24 @@ class ConfigManager:
         for line in lines:
             stripped_line = line.strip()
             # Check for category (e.g., 'app:')
-            if stripped_line.endswith(":") and not stripped_line.startswith("#"):
+            # A category should end with ':', not start with '#', and not be indented.
+            if (
+                stripped_line.endswith(":")
+                and not stripped_line.startswith("#")
+                and line.startswith(stripped_line)
+            ):
                 current_category = stripped_line[:-1]
                 new_lines.append(line)
             else:
                 # Check for parameter (e.g., '  date_format: '%Y-%m-%d'')
+                # This needs to handle cases where the value spans multiple lines
                 parts = stripped_line.split(":", 1)
-                if len(parts) > 1:
+                if len(parts) > 1:  # This line might be a parameter definition
                     param_name = parts[0].strip()
                     if param_name in all_parameters:
                         param = all_parameters[param_name]
-                        # Ensure the parameter belongs to the current category if applicable
+                        # Ensure the parameter belongs to the current category
+                        # and is not a sub-item of a multi-line value
                         if current_category and param.category == current_category:
                             comment_indent = " " * (len(line) - len(stripped_line))
                             comment = (

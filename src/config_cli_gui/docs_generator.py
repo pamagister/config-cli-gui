@@ -70,23 +70,7 @@ class DocumentationGenerator:
         """Generate a default configuration file with all parameters and descriptions."""
         output_path = Path(output_file)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write("# Configuration File\n")
-            f.write("# This file was auto-generated. Modify as needed.\n\n")
-
-            for category_name, category in self.config_manager._categories.items():
-                f.write(f"# {category_name.upper()} Configuration\n")
-                f.write(f"{category_name}:\n")
-
-                for param in category.get_parameters():
-                    f.write(f"  # {param.help}\n")
-                    if param.choices:
-                        f.write(f"  # Choices: {param.choices}\n")
-                    f.write(f"  # Type: {type(param.default).__name__}\n")
-                    f.write(f"  {param.name}: {repr(param.default)}\n\n")
-
-                f.write("\n")
+        self.config_manager.save_to_file(output_path.as_posix())
 
     def generate_cli_markdown_doc(self, output_file: str, app_name: str = "app"):
         """Generate Markdown CLI documentation."""
