@@ -189,15 +189,11 @@ class MiscConfig(BaseConfigCategory):
 class ConfigParameterManager(ConfigManager):  # Inherit from ConfigManager
     """Main configuration manager that handles all parameter categories."""
 
-    def __init__(self, config_file: str | None = None, **kwargs):
-        # Erst den Parent initialisieren
-        super().__init__(config_file, **kwargs)
+    categories = (CliConfig(), AppConfig(), GuiConfig(), MiscConfig())
 
-        # Dann die Kategorien hinzufügen
-        self.add_category("cli", CliConfig())
-        self.add_category("app", AppConfig())
-        self.add_category("gui", GuiConfig())
-        self.add_category("misc", MiscConfig())
+    def __init__(self, config_file: str | None = None, **kwargs):
+        """Initialize the configuration manager with all parameter categories."""
+        super().__init__(self.categories, config_file, **kwargs)
 
 
 def main():

@@ -93,7 +93,9 @@ class BaseConfigCategory(BaseModel, ABC):
 class ConfigManager:
     """Generic configuration manager that can handle multiple configuration categories."""
 
-    def __init__(self, config_file: str = None, **kwargs):
+    def __init__(
+        self, categories: tuple[BaseConfigCategory, ...], config_file: str = None, **kwargs
+    ):
         """Initialize configuration manager.
 
         Args:
@@ -101,6 +103,14 @@ class ConfigManager:
             **kwargs: Override parameters in format category__parameter
         """
         self._categories: dict[str, BaseConfigCategory] = {}
+
+        for category in categories:
+            if isinstance(category, BaseConfigCategory):
+                self.add_category(category.get_category_name(), category)
+            else:
+                raise TypeError(
+                    f"Category must be an instance of BaseConfigCategory, got {type(category)}"
+                )
 
         # Load from file if provided
         if config_file:
@@ -146,8 +156,14 @@ class ConfigManager:
             else:
                 config_data = json.load(f)
 
+        # Store loaded data for later application
+        self._apply_config_data(config_data)
+
+    def _apply_config_data(self, _loaded_config_data):
+        """Apply configuration data to categories."""
+
         # Apply loaded configuration
-        for category_name, category_data in config_data.items():
+        for category_name, category_data in _loaded_config_data.items():
             if category_name in self._categories:
                 category = self._categories[category_name]
                 for param_name, param_value in category_data.items():
@@ -165,7 +181,7 @@ class ConfigManager:
                                 param.default = param_value
 
     def save_to_file(self, config_file: str, format_: str = "auto"):
-        """Save current configuration to file."""
+        """Save current configuration to file with enhanced YAML formatting."""
         config_path = Path(config_file)
         config_data = self.to_dict()
 
