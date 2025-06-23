@@ -82,48 +82,44 @@ class CalendarDialog:
         main_frame = ttk.Frame(self.dialog)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        # Year selection
-        year_frame = ttk.Frame(main_frame)
-        year_frame.pack(fill=tk.X, pady=(0, 5))
+        # Date selection in a single row
+        date_label_frame = ttk.Frame(main_frame)
+        date_label_frame.pack(fill=tk.X, pady=(0, 2))
 
-        ttk.Label(year_frame, text="Year:").pack(side=tk.LEFT)
+        ttk.Label(date_label_frame, text="Year:").pack(side=tk.LEFT, expand=True)
+        ttk.Label(date_label_frame, text="Month:").pack(side=tk.LEFT, expand=True)
+        ttk.Label(date_label_frame, text="Day:").pack(side=tk.LEFT, expand=True)
+
+        date_input_frame = ttk.Frame(main_frame)
+        date_input_frame.pack(fill=tk.X, pady=(0, 10))
+
         self.year_var = tk.IntVar(value=self.initial_date.year)
         year_spinbox = ttk.Spinbox(
-            year_frame,
+            date_input_frame,
             from_=1900,
             to=2100,
             textvariable=self.year_var,
             command=self._update_calendar,
-            width=10,
+            width=8,
         )
-        year_spinbox.pack(side=tk.LEFT, padx=(5, 0))
+        year_spinbox.pack(side=tk.LEFT, expand=True, padx=(0, 5))
 
-        # Month selection
-        month_frame = ttk.Frame(main_frame)
-        month_frame.pack(fill=tk.X, pady=(0, 5))
-
-        ttk.Label(month_frame, text="Month:").pack(side=tk.LEFT)
         self.month_var = tk.IntVar(value=self.initial_date.month)
         month_combo = ttk.Combobox(
-            month_frame,
+            date_input_frame,
             textvariable=self.month_var,
             values=list(range(1, 13)),
             state="readonly",
             width=8,
         )
-        month_combo.pack(side=tk.LEFT, padx=(5, 0))
+        month_combo.pack(side=tk.LEFT, expand=True, padx=(0, 5))
         month_combo.bind("<<ComboboxSelected>>", lambda e: self._update_calendar())
 
-        # Day selection
-        day_frame = ttk.Frame(main_frame)
-        day_frame.pack(fill=tk.X, pady=(0, 5))
-
-        ttk.Label(day_frame, text="Day:").pack(side=tk.LEFT)
         self.day_var = tk.IntVar(value=self.initial_date.day)
         self.day_spinbox = ttk.Spinbox(
-            day_frame, from_=1, to=31, textvariable=self.day_var, width=8
+            date_input_frame, from_=1, to=31, textvariable=self.day_var, width=8
         )
-        self.day_spinbox.pack(side=tk.LEFT, padx=(5, 0))
+        self.day_spinbox.pack(side=tk.LEFT, expand=True)
 
         # Time selection
         time_frame = ttk.Frame(main_frame)
@@ -247,7 +243,7 @@ class GenericSettingsDialog:
         """Create a tab for a configuration category."""
         # Create tab frame
         tab_frame = ttk.Frame(self.notebook)
-        self.notebook.add(tab_frame, text=category_name.title())
+        self.notebook.add(tab_frame, text="  " + category_name.title() + "  ")
 
         # Create scrollable frame
         canvas = tk.Canvas(tab_frame)
@@ -394,7 +390,7 @@ class GenericSettingsDialog:
         entry = ttk.Entry(frame, textvariable=var, width=10)
         entry.pack(side=tk.LEFT)
 
-        color_display = tk.Label(frame, width=3, bg=color_value.to_hex())
+        color_display = tk.Label(frame, width=7, bg=color_value.to_hex())
         color_display.pack(side=tk.LEFT, padx=(5, 0))
 
         def pick_color():
