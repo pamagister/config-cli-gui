@@ -272,7 +272,8 @@ class ConfigManager:
                             comment_indent = " " * (len(line) - len(stripped_line))
                             comment = (
                                 f"{comment_indent}# {param.help} | "
-                                f"type={type(param).__name__}, default={param.default}"
+                                f"type={type(param.default).__name__}, default={param.default}"
+                                f"{' [CLI]' if param.is_cli else ''}"
                             )
                             new_lines.append(comment)
                 new_lines.append(line)

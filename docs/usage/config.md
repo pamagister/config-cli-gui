@@ -28,20 +28,20 @@ The parameters in the cli category can be accessed via the command line interfac
 
 ## Category "gui"
 
-| Name              | Type | Description                                | Default | Choices                   |
-|-------------------|------|--------------------------------------------|---------|---------------------------|
-| theme             | str  | GUI theme setting                          | 'light' | ['light', 'dark', 'auto'] |
-| window_width      | int  | Default window width                       | 800     | -                         |
-| window_height     | int  | Default window height                      | 600     | -                         |
-| log_window_height | int  | Height of the log window in pixels         | 200     | -                         |
-| auto_scroll_log   | bool | Automatically scroll to newest log entries | True    | [True, False]             |
-| max_log_lines     | int  | Maximum number of log lines to keep in GUI | 1000    | -                         |
+| Name              | Type | Description                                    | Default | Choices                   |
+|-------------------|------|------------------------------------------------|---------|---------------------------|
+| theme             | str  | GUI theme setting                              | 'light' | ['light', 'dark', 'auto'] |
+| window_width      | int  | Default window width                           | 800     | -                         |
+| window_height     | int  | Default window height                          | 600     | -                         |
+| log_window_height | int  | Height of the log window in pixels             | 200     | -                         |
+| auto_scroll_log   | bool | Automatically scroll to the newest log entries | True    | [True, False]             |
+| max_log_lines     | int  | Maximum number of log lines to keep in GUI     | 1000    | -                         |
 
 ## Category "misc"
 
-| Name       | Type        | Description                       | Default                                            | Choices |
-|------------|-------------|-----------------------------------|----------------------------------------------------|---------|
-| some_file  | WindowsPath | Path to the file to use           | WindowsPath('some_file.txt')                       | -       |
-| some_color | Color       | Color setting for the application | Color(255, 0, 0)                                   | -       |
-| some_date  | datetime    | Date setting for the application  | datetime.datetime(2025, 6, 23, 18, 58, 52, 946103) | -       |
+| Name       | Type        | Description                       | Default                                          | Choices |
+|------------|-------------|-----------------------------------|--------------------------------------------------|---------|
+| some_file  | WindowsPath | Path to the file to use           | WindowsPath('some_file.txt')                     | -       |
+| some_color | Color       | Color setting for the application | Color(255, 0, 0)                                 | -       |
+| some_date  | datetime    | Date setting for the application  | datetime.datetime(2025, 6, 24, 0, 19, 57, 95774) | -       |
 

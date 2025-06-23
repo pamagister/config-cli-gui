@@ -4,6 +4,14 @@ Changelog
 
 (unreleased)
 ------------
+- Update README.md from docs/index.md. [github-actions]
+- Feat #5: extensive renaming and adjustments. [Paul Magister]
+- Feat #5: extensive renaming. [Paul Magister]
+- Feat #5: extensive renaming. [Paul Magister]
+
+
+0.1.2 (2025-06-23)
+------------------
 - Feat #5: improve dialog. [Paul Magister]
 - Feat #5: Bugfig: use specific dialog for path parameters. [Paul
   Magister]
@@ -24,8 +32,8 @@ Changelog
 - Feat #3: avoid type_ [Paul Magister]
 - Feat #3: Improved paramter types: [Paul Magister]
 - Feat #3: Improved paramter types: * move example project to tests *
-  remove type_ * add improved widgets to gui.py * separate
-  module for docs.py. [Paul Magister]
+  remove type_ * add improved widgets to gui_generator.py * separate
+  module for docs_generator.py. [Paul Magister]
 
 
 0.1.0 (2025-06-22)

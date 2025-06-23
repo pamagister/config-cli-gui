@@ -153,7 +153,7 @@ class GuiConfig(ConfigCategory):
     auto_scroll_log: ConfigParameter = ConfigParameter(
         name="auto_scroll_log",
         default=True,
-        help="Automatically scroll to newest log entries",
+        help="Automatically scroll to the newest log entries",
     )
 
     max_log_lines: ConfigParameter = ConfigParameter(
