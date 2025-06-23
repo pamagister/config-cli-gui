@@ -68,7 +68,7 @@ class ConfigParameter:
         return type(self.default)
 
 
-class BaseConfigCategory(BaseModel, ABC):
+class ConfigCategory(BaseModel, ABC):
     """Base class for configuration categories."""
 
     @abstractmethod
@@ -90,19 +90,17 @@ class BaseConfigCategory(BaseModel, ABC):
 class ConfigManager:
     """Generic configuration manager that can handle multiple configuration categories."""
 
-    def __init__(
-        self, categories: tuple[BaseConfigCategory, ...], config_file: str = None, **kwargs
-    ):
+    def __init__(self, categories: tuple[ConfigCategory, ...], config_file: str = None, **kwargs):
         """Initialize configuration manager.
 
         Args:
             config_file: Path to configuration file (JSON or YAML)
             **kwargs: Override parameters in format category__parameter
         """
-        self._categories: dict[str, BaseConfigCategory] = {}
+        self._categories: dict[str, ConfigCategory] = {}
 
         for category in categories:
-            if isinstance(category, BaseConfigCategory):
+            if isinstance(category, ConfigCategory):
                 self.add_category(category.get_category_name(), category)
             else:
                 raise TypeError(
@@ -116,7 +114,7 @@ class ConfigManager:
         # Override with provided kwargs
         self._apply_kwargs(kwargs)
 
-    def add_category(self, name: str, category: BaseConfigCategory):
+    def add_category(self, name: str, category: ConfigCategory):
         """Add a configuration category.
 
         Args:
@@ -125,7 +123,7 @@ class ConfigManager:
         """
         self._categories[name] = category
 
-    def get_category(self, name: str) -> BaseConfigCategory:
+    def get_category(self, name: str) -> ConfigCategory:
         """Get a configuration category by name."""
         return self._categories.get(name)
 

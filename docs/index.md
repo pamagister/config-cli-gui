@@ -50,10 +50,11 @@ Start by defining your application's configuration parameters in a central `conf
 
 ```python
 # my_project/config_example.py
-from config_cli_gui.config import ConfigParameter, GenericConfigManager, BaseConfigCategory
-from pydantic import Field # Make sure pydantic is installed
+from config_cli_gui.config import ConfigParameter, GenericConfigManager, ConfigCategory
+from pydantic import Field  # Make sure pydantic is installed
 
-class MyCliConfig(BaseConfigCategory):
+
+class MyCliConfig(ConfigCategory):
     """CLI-specific parameters for MyProject."""
     input_path: ConfigParameter = ConfigParameter(
         name="input_path",
@@ -61,7 +62,7 @@ class MyCliConfig(BaseConfigCategory):
         type_=str,
         help="Path to the input file or directory",
         required=True,
-        cli_arg=None # Positional argument
+        cli_arg=None  # Positional argument
     )
     output_dir: ConfigParameter = ConfigParameter(
         name="output_dir",
@@ -78,7 +79,8 @@ class MyCliConfig(BaseConfigCategory):
         cli_arg="--dry-run"
     )
 
-class MyAppConfig(BaseConfigCategory):
+
+class MyAppConfig(ConfigCategory):
     """Application-wide settings."""
     log_level: ConfigParameter = ConfigParameter(
         name="log_level",
@@ -94,7 +96,8 @@ class MyAppConfig(BaseConfigCategory):
         help="Maximum number of processing threads"
     )
 
-class MyGuiConfig(BaseConfigCategory):
+
+class MyGuiConfig(ConfigCategory):
     """GUI-specific settings."""
     theme: ConfigParameter = ConfigParameter(
         name="theme",
@@ -109,6 +112,7 @@ class MyGuiConfig(BaseConfigCategory):
         type_=str,
         help="Initial GUI window size"
     )
+
 
 class ProjectConfigManager(GenericConfigManager):
     """Main configuration manager for MyProject."""

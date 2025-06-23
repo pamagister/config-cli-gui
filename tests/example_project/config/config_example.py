@@ -9,15 +9,15 @@ from datetime import datetime
 from pathlib import Path
 
 from config_cli_gui.config import (
-    BaseConfigCategory,
     Color,
+    ConfigCategory,
     ConfigManager,
     ConfigParameter,
 )
 from config_cli_gui.docs import DocumentationGenerator
 
 
-class CliConfig(BaseConfigCategory):
+class CliConfig(ConfigCategory):
     """CLI-specific configuration parameters."""
 
     def get_category_name(self) -> str:
@@ -62,7 +62,7 @@ class CliConfig(BaseConfigCategory):
     )
 
 
-class AppConfig(BaseConfigCategory):
+class AppConfig(ConfigCategory):
     """Application-specific configuration parameters."""
 
     def get_category_name(self) -> str:
@@ -119,7 +119,7 @@ class AppConfig(BaseConfigCategory):
     )
 
 
-class GuiConfig(BaseConfigCategory):
+class GuiConfig(ConfigCategory):
     """GUI-specific configuration parameters."""
 
     def get_category_name(self) -> str:
@@ -163,7 +163,7 @@ class GuiConfig(BaseConfigCategory):
     )
 
 
-class MiscConfig(BaseConfigCategory):
+class MiscConfig(ConfigCategory):
     def get_category_name(self) -> str:
         return "misc"
 

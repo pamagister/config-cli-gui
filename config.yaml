@@ -45,7 +45,7 @@ misc:
   - 255
   - 0
   - 0
-  # Date setting for the application | type=ConfigParameter, default=2025-06-23 18:58:52.946103
-  some_date: '2025-06-23T18:58:52.946103'
+  # Date setting for the application | type=ConfigParameter, default=2025-06-23 18:58:00
+  some_date: '2025-06-23T18:58:00'
   # Path to the file to use | type=ConfigParameter, default=some_file.txt
   some_file: some_file.txt
