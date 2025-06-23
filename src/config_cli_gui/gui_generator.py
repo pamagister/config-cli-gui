@@ -302,29 +302,27 @@ class GenericSettingsDialog:
 
     def _create_parameter_widget(self, parent, param: ConfigParameter):
         """Create appropriate widget for parameter type."""
-        param_type = type(param.default)
-
         # Boolean type - Checkbox
-        if param_type == bool:
+        if isinstance(param.default, bool):
             var = tk.BooleanVar(value=param.default)
             widget = ttk.Checkbutton(parent, variable=var)
             widget.var = var
             return widget
 
         # Path type - File/Directory selector
-        elif param_type == Path:
+        elif isinstance(param.default, Path):
             return self._create_path_widget(parent, param)
 
         # Color type - Color picker
-        elif param_type == Color:
+        elif isinstance(param.default, Color):
             return self._create_color_widget(parent, param)
 
         # DateTime type - DateTime picker
-        elif param_type == datetime:
+        elif isinstance(param.default, datetime):
             return self._create_datetime_widget(parent, param)
 
         # List/Tuple with choices - Combobox
-        elif param.choices and param_type != bool:
+        elif param.choices and not isinstance(param.default, bool):
             var = tk.StringVar(value=str(param.default))
             widget = ttk.Combobox(
                 parent, textvariable=var, values=list(param.choices), state="readonly"
@@ -333,22 +331,22 @@ class GenericSettingsDialog:
             return widget
 
         # List/Tuple type - Multi-entry widget
-        elif param_type in (list, tuple):
+        elif isinstance(param.default, list) or isinstance(param.default, tuple):
             return self._create_list_widget(parent, param)
 
         # Dict type - Key-Value editor
-        elif param_type == dict:
+        elif isinstance(param.default, dict):
             return self._create_dict_widget(parent, param)
 
         # Integer type - Spinbox
-        elif param_type == int:
+        elif isinstance(param.default, int):
             var = tk.IntVar(value=param.default)
             widget = ttk.Spinbox(parent, from_=-999999, to=999999, textvariable=var)
             widget.var = var
             return widget
 
         # Float type - Spinbox
-        elif param_type == float:
+        elif isinstance(param.default, float):
             var = tk.DoubleVar(value=param.default)
             widget = ttk.Spinbox(
                 parent, from_=-999999.0, to=999999.0, increment=1.0, textvariable=var
