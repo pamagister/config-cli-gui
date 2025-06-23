@@ -29,25 +29,21 @@ class BaseGPXProcessor:
         self.include_elevation = elevation
         self.logger = logger
 
-        # Initialize SRTM elevation data only if elevation is requested and SRTM is available
-        self.elevation_data = None
-        self.srtm_available = False
-
         self.logger.info(f"example module successfully initialized with input: {self.input}")
 
-    def compress_files(self) -> list[Path]:
+    def compress_files(self) -> list[str]:
         """Shrink the size of all given gpx/kml files in se
         lf.input."""
         self.logger.info("successfully triggered function")
-        return self.input
+        return [str(path) for path in self.input]
 
-    def merge_files(self) -> list[Path]:
+    def merge_files(self) -> list[str]:
         """Merge all files of self.input into one gpx file with reduced resolution."""
         self.logger.info("successfully triggered function")
-        return self.input
+        return [str(path) for path in self.input]
 
-    def extract_pois(self) -> list[Path]:
+    def extract_pois(self) -> list[str]:
         """Merge every starting point of each track in all files
         into one gpx file with many pois."""
         self.logger.info("successfully triggered function")
-        return self.input
+        return [str(path) for path in self.input]

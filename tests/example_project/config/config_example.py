@@ -8,13 +8,13 @@ and documentation from the parameter definitions.
 from datetime import datetime
 from pathlib import Path
 
-from config_cli_gui.config_framework import (
+from config_cli_gui.config import (
     BaseConfigCategory,
     Color,
     ConfigManager,
     ConfigParameter,
 )
-from config_cli_gui.docs_generator import DocumentationGenerator
+from config_cli_gui.docs import DocumentationGenerator
 
 
 class CliConfig(BaseConfigCategory):

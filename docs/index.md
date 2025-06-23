@@ -49,7 +49,7 @@ pip install config-cli-gui
 Start by defining your application's configuration parameters in a central `config.py` file within your project. You will inherit from `config-cli-gui`'s `GenericConfigManager` and `BaseConfigCategory`.
 
 ```python
-# my_project/config.py
+# my_project/config_example.py
 from config_cli_gui.config import ConfigParameter, GenericConfigManager, BaseConfigCategory
 from pydantic import Field # Make sure pydantic is installed
 
@@ -130,7 +130,7 @@ class ProjectConfigManager(GenericConfigManager):
 Use the generic CLI functions to parse command-line arguments based on your defined `CliConfig`.
 
 ```python
-# my_project/cli.py
+# my_project/cli_example.py
 import argparse
 from my_project.config import ProjectConfigManager
 from config_cli_gui.cli import create_argument_parser, create_config_overrides_from_args
@@ -191,7 +191,7 @@ if __name__ == "__main__":
 The `SettingsDialog` from `config-cli-gui` (or your project's adapted version) can be used to easily create a settings window.
 
 ```python
-# my_project/gui.py (Simplified example)
+# my_project/gui_example.py (Simplified example)
 import tkinter as tk
 from my_project.config import ProjectConfigManager
 from config_cli_gui.gui_settings import SettingsDialog # Assuming gui_settings is part of the generic lib or adapted

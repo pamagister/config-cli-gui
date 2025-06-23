@@ -12,7 +12,7 @@ import logging.handlers
 import sys
 from pathlib import Path
 
-from config_cli_gui.config_framework import ConfigManager
+from tests.example_project.config.config_example import ConfigParameterManager
 
 
 class GuiLogHandler(logging.Handler):
@@ -39,7 +39,7 @@ class GuiLogHandler(logging.Handler):
 class LoggerManager:
     """Manages all logging configuration and handlers."""
 
-    def __init__(self, config: ConfigManager):
+    def __init__(self, config: ConfigParameterManager):
         self.config = config
         self.logger = logging.getLogger("config_cli_gui")
         self.gui_handler = None
@@ -103,7 +103,7 @@ class LoggerManager:
         """Connect a GUI writer to the logging system.
 
         Args:
-            gui_writer: Object with write() method (like the LogHandler from gui.py)
+            gui_writer: Object with write() method (like the LogHandler from gui_example.py)
         """
         if self.gui_handler:
             # Remove old handler if it exists
@@ -158,7 +158,7 @@ class LoggerManager:
 _logger_manager = None
 
 
-def initialize_logging(config: ConfigManager) -> LoggerManager:
+def initialize_logging(config: ConfigParameterManager) -> LoggerManager:
     """Initialize the global logging system.
 
     Args:

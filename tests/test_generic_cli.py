@@ -1,6 +1,6 @@
 """Generic unittest class for testing CLI and config integration.
 
-This test suite validates the integration between config.py and cli.py
+This test suite validates the integration between config_example.py and cli_example.py
 with various parameter combinations and edge cases.
 """
 
@@ -8,8 +8,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from config_cli_gui.docs_generator import DocumentationGenerator
-from tests.example_project.config.config import ConfigParameterManager
+from config_cli_gui.docs import DocumentationGenerator
+from tests.example_project.config.config_example import ConfigParameterManager
 
 
 class TestGenericCLI(unittest.TestCase):

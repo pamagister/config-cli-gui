@@ -1,4 +1,4 @@
-# config_framework/gui.py
+# config/gui_example.py
 """Generic GUI settings dialog generator for configuration framework."""
 
 import calendar
@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import colorchooser, filedialog, messagebox, ttk
 
-from config_cli_gui.config_framework import Color, ConfigManager, ConfigParameter
+from config_cli_gui.config import Color, ConfigManager, ConfigParameter
 
 
 class ToolTip:

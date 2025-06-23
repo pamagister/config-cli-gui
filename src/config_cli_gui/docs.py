@@ -1,7 +1,7 @@
 from pathlib import Path
 from textwrap import dedent
 
-from config_cli_gui.config_framework import ConfigManager
+from config_cli_gui.config import ConfigManager
 
 
 class DocumentationGenerator:
