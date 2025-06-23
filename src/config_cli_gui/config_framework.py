@@ -1,6 +1,3 @@
-# config_framework/core.py
-"""Generic configuration framework for Python applications."""
-
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -64,11 +61,6 @@ class ConfigParameter:
             self.cli_arg = f"--{self.name}"
         if isinstance(self.default, bool) and self.choices is None:
             self.choices = [True, False]
-
-    @property
-    def type_(self) -> type:
-        """Get the type from the default value."""
-        return type(self.default)
 
 
 class BaseConfigCategory(BaseModel, ABC):
@@ -181,7 +173,12 @@ class ConfigManager:
                                 param.default = param_value
 
     def save_to_file(self, config_file: str, format_: str = "auto"):
-        """Save current configuration to file with enhanced YAML formatting."""
+        """Save current configuration to file with enhanced YAML formatting and comments.
+
+        Args:
+            config_file (str): The path to the configuration file.
+            format_ (str): The format to save the file in ('auto', 'json', 'yaml').
+        """
         config_path = Path(config_file)
         config_data = self.to_dict()
 
@@ -197,6 +194,10 @@ class ConfigManager:
                 yaml.dump(config_data, f, default_flow_style=False, indent=2)
             else:
                 json.dump(config_data, f, indent=2)
+
+        # Append comments for YAML files
+        if format_ == "yaml":
+            self._append_comments_to_yaml(config_path)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert configuration to dictionary."""
@@ -231,3 +232,38 @@ class ConfigManager:
                 if param.is_cli:
                     cli_parameters.append(param)
         return cli_parameters
+
+    def _append_comments_to_yaml(self, config_path: Path):
+        """Appends comments to a YAML file based on ConfigParameter metadata.
+
+        Args:
+            config_path (Path): The path to the YAML configuration file.
+        """
+        lines = config_path.read_text(encoding="utf-8").splitlines()
+        new_lines = []
+        all_parameters = {param.name: param for param in self.get_all_parameters()}
+        current_category = None
+
+        for line in lines:
+            stripped_line = line.strip()
+            # Check for category (e.g., 'app:')
+            if stripped_line.endswith(":") and not stripped_line.startswith("#"):
+                current_category = stripped_line[:-1]
+                new_lines.append(line)
+            else:
+                # Check for parameter (e.g., '  date_format: '%Y-%m-%d'')
+                parts = stripped_line.split(":", 1)
+                if len(parts) > 1:
+                    param_name = parts[0].strip()
+                    if param_name in all_parameters:
+                        param = all_parameters[param_name]
+                        # Ensure the parameter belongs to the current category if applicable
+                        if current_category and param.category == current_category:
+                            comment_indent = " " * (len(line) - len(stripped_line))
+                            comment = (
+                                f"{comment_indent}# {param.help} | "
+                                f"type={type(param).__name__}, default={param.default}"
+                            )
+                            new_lines.append(comment)
+                new_lines.append(line)
+        config_path.write_text("\n".join(new_lines), encoding="utf-8")
