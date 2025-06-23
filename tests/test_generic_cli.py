@@ -79,7 +79,7 @@ class TestGenericCLI(unittest.TestCase):
 
         # Check file content
         content = output_file.read_text()
-        self.assertIn("# Configuration File", content)
+        self.assertIn("# Include elevation data in waypoints", content)
 
         for param in self.default_cli_config.keys():
             with self.subTest(parameter=param):
