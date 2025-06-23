@@ -50,82 +50,73 @@ Start by defining your application's configuration parameters in a central `conf
 
 ```python
 # my_project/config_example.py
-from config_cli_gui.config import ConfigParameter, GenericConfigManager, ConfigCategory
-from pydantic import Field  # Make sure pydantic is installed
+
+from config_cli_gui.config import (
+    ConfigCategory,
+    ConfigManager,
+    ConfigParameter,
+)
 
 
-class MyCliConfig(ConfigCategory):
-    """CLI-specific parameters for MyProject."""
-    input_path: ConfigParameter = ConfigParameter(
-        name="input_path",
+class CliConfig(ConfigCategory):
+    """CLI-specific configuration parameters."""
+
+    def get_category_name(self) -> str:
+        return "cli"
+
+    # Positional argument
+    input: ConfigParameter = ConfigParameter(
+        name="input",
         default="",
-        type_=str,
-        help="Path to the input file or directory",
+        help="Path to input (file or folder)",
         required=True,
-        cli_arg=None  # Positional argument
+        is_cli=True,
     )
-    output_dir: ConfigParameter = ConfigParameter(
-        name="output_dir",
-        default="./output",
-        type_=str,
-        help="Directory for output files",
-        cli_arg="--output"
+
+    min_dist: ConfigParameter = ConfigParameter(
+        name="min_dist",
+        default=20,
+        help="Maximum distance between two waypoints",
+        is_cli=True,
     )
-    dry_run: ConfigParameter = ConfigParameter(
-        name="dry_run",
-        default=False,
-        type_=bool,
-        help="Perform a dry run without making actual changes",
-        cli_arg="--dry-run"
+
+    extract_waypoints: ConfigParameter = ConfigParameter(
+        name="extract_waypoints",
+        default=True,
+        help="Extract starting points of each track as waypoint",
+        is_cli=True,
     )
 
 
-class MyAppConfig(ConfigCategory):
-    """Application-wide settings."""
+class AppConfig(ConfigCategory):
+    """Application-specific configuration parameters."""
+
+    def get_category_name(self) -> str:
+        return "app"
+
     log_level: ConfigParameter = ConfigParameter(
         name="log_level",
         default="INFO",
-        type_=str,
-        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
-        help="Logging verbosity level"
-    )
-    max_threads: ConfigParameter = ConfigParameter(
-        name="max_threads",
-        default=4,
-        type_=int,
-        help="Maximum number of processing threads"
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="Logging level for the application",
     )
 
-
-class MyGuiConfig(ConfigCategory):
-    """GUI-specific settings."""
-    theme: ConfigParameter = ConfigParameter(
-        name="theme",
-        default="dark",
-        type_=str,
-        choices=["light", "dark", "system"],
-        help="GUI theme"
-    )
-    window_size: ConfigParameter = ConfigParameter(
-        name="window_size",
-        default="800x600",
-        type_=str,
-        help="Initial GUI window size"
+    log_file_max_size: ConfigParameter = ConfigParameter(
+        name="log_file_max_size",
+        default=10,
+        help="Maximum log file size in MB before rotation",
     )
 
 
-class ProjectConfigManager(GenericConfigManager):
-    """Main configuration manager for MyProject."""
-    cli: MyCliConfig = Field(default_factory=MyCliConfig)
-    app: MyAppConfig = Field(default_factory=MyAppConfig)
-    gui: MyGuiConfig = Field(default_factory=MyGuiConfig)
+class ProjectConfigManager(ConfigManager):  # Inherit from ConfigManager
+    """Main configuration manager that handles all parameter categories."""
+
+    categories = (CliConfig(), AppConfig())
 
     def __init__(self, config_file: str | None = None, **kwargs):
-        # Dynamically register categories for the generic manager
-        self.__class__.add_config_category("cli", MyCliConfig)
-        self.__class__.add_config_category("app", MyAppConfig)
-        self.__class__.add_config_category("gui", MyGuiConfig)
-        super().__init__(config_file, **kwargs)
+        """Initialize the configuration manager with all parameter categories."""
+        super().__init__(self.categories, config_file, **kwargs)
+
 
 ```
 
@@ -135,59 +126,75 @@ Use the generic CLI functions to parse command-line arguments based on your defi
 
 ```python
 # my_project/cli_example.py
-import argparse
-from my_project.config import ProjectConfigManager
-from config_cli_gui.cli import create_argument_parser, create_config_overrides_from_args
+from config_cli_gui.cli import CliGenerator
+from config_cli_gui.config import ConfigManager
+from tests.example_project.config.config_example import ProjectConfigManager
+from tests.example_project.core.base import BaseGPXProcessor
+from tests.example_project.core.logging import initialize_logging
 
-def parse_my_args():
-    # Define any project-specific hardcoded CLI args (e.g., --version)
-    extra_cli_args = {
-        "--version": {"action": "version", "version": "MyProject 1.0.0", "help": "Show program's version number and exit."}
-    }
 
-    parser = create_argument_parser(
-        config_manager_class=ProjectConfigManager,
-        description="MyProject CLI application",
-        epilog="""
-Examples:
-  python -m my_project.cli my_input.txt --output ./results
-  python -m my_project.cli --config custom.yaml another_input.csv
-        """,
-        cli_category_name="cli", # The name of your CLI config category
-        extra_arguments=extra_cli_args
+def run_main_processing(_config: ConfigManager) -> int:
+    """Main processing function that gets called by the CLI generator.
+
+    Args:
+        _config: Configuration manager with all settings
+
+    Returns:
+        Exit code (0 for success, non-zero for error)
+    """
+    # Initialize logging system
+    logger_manager = initialize_logging(_config)
+    logger = logger_manager.get_logger("config_cli_gui.cli")
+
+    try:
+        # Log startup information
+        logger.info("Starting config_cli_gui CLI")
+        logger_manager.log_config_summary()
+
+        logger.info(f"Processing input")
+
+        # Create and run BaseGPXProcessor
+        processor = BaseGPXProcessor(
+            _config.get_category("cli").input.default,
+            _config.get_category("cli").output.default,
+            _config.get_category("cli").min_dist.default,
+            _config.get_category("app").date_format.default,
+            _config.get_category("cli").elevation.default,
+            logger=logger,
+        )
+
+        logger.info("Starting conversion process")
+
+        # Run the processing (adjust method name based on your actual implementation)
+        result_files = processor.compress_files()
+        logger.info(f"Successfully processed {result_files}")
+        return 0
+
+    except Exception as e:
+        logger.error(f"Processing failed: {e}")
+        logger.debug("Full traceback:", exc_info=True)
+        return 1
+
+
+def main():
+    """Main entry point for the CLI application."""
+    # Create the base configuration manager
+    config_manager = ProjectConfigManager()
+
+    # Create CLI generator
+    cli_generator = CliGenerator(config_manager=config_manager, app_name="config_cli_gui")
+
+    # Run the CLI with our main processing function
+    return cli_generator.run_cli(
+        main_function=run_main_processing,
+        description="Example CLI for config-cli-gui using the generic config framework.",
     )
-    return parser.parse_args()
 
-def main_cli():
-    args = parse_my_args()
-
-    # Map generic flags like verbose/quiet to specific log levels if desired
-    log_level_map = {
-        "verbose": "DEBUG", # Assuming you added a --verbose flag in extra_cli_args
-        "quiet": "WARNING"  # Assuming you added a --quiet flag
-    }
-
-    cli_overrides = create_config_overrides_from_args(
-        args,
-        config_manager_class=ProjectConfigManager,
-        cli_category_name="cli",
-        log_level_map=log_level_map
-    )
-
-    # Initialize your project's configuration
-    config = ProjectConfigManager(
-        config_file=args.config if hasattr(args, "config") and args.config else None,
-        **cli_overrides
-    )
-
-    print(f"Input Path: {config.cli.input_path.default}")
-    print(f"Output Directory: {config.cli.output_dir.default}")
-    print(f"Dry Run: {config.cli.dry_run.default}")
-    print(f"Log Level: {config.app.log_level.default}")
-    # ... your application logic using 'config'
 
 if __name__ == "__main__":
-    main_cli()
+    import sys
+
+    sys.exit(main())
 ```
 
 ### 3\. Integrate GUI Settings Dialog
@@ -197,25 +204,27 @@ The `SettingsDialog` from `config-cli-gui` (or your project's adapted version) c
 ```python
 # my_project/gui_example.py (Simplified example)
 import tkinter as tk
-from my_project.config import ProjectConfigManager
-from config_cli_gui.gui_settings import SettingsDialog # Assuming gui_settings is part of the generic lib or adapted
+from tests.example_project.config.config_example import ProjectConfigManager
+from config_cli_gui.gui import GenericSettingsDialog  # Assuming gui_settings is part of the generic lib or adapted
+
 
 def open_settings_window(parent_root, config_manager: ProjectConfigManager):
-    dialog = SettingsDialog(parent_root, config_manager)
+    dialog = GenericSettingsDialog(parent_root, config_manager)
     parent_root.wait_window(dialog.dialog)
     # After dialog closes, config_manager will have updated values if 'OK' was clicked
     print("Settings updated or cancelled.")
-    print(f"New GUI Theme: {config_manager.gui.theme.default}")
+    print(f"New GUI Theme: {config_manager.get_category('gui').theme.default}")
+
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.withdraw() # Hide main window for this example
-    
+    root.withdraw()  # Hide main window for this example
+
     # Initialize your project's config manager
-    project_config = ProjectConfigManager() 
-    
+    project_config = ProjectConfigManager()
+
     open_settings_window(root, project_config)
-    
+
     root.destroy()
 ```
 
@@ -225,29 +234,27 @@ Use the static methods on your `ProjectConfigManager` to generate `config.yaml`,
 
 ```python
 # scripts/generate_docs.py (or similar script in your project)
-from my_project.config import ProjectConfigManager
+from tests.example_project.config.config_example import ProjectConfigManager
+from config_cli_gui.docs import DocumentationGenerator
 import os
 
 # Define output paths
 output_dir = "docs/generated"
 os.makedirs(output_dir, exist_ok=True)
 
-config_file_path = "config.yaml" # At the project root or similar
-cli_doc_path = os.path.join(output_dir, "cli.md")
-config_doc_path = os.path.join(output_dir, "config.md")
+default_config = "config.yaml"  # At the project root or similar
+default_cli_doc = os.path.join(output_dir, "cli.md")
+default_config_doc = os.path.join(output_dir, "config.md")
+_config = ProjectConfigManager()
+doc_gen = DocumentationGenerator(_config)
+doc_gen.generate_default_config_file(output_file=default_config)
+print(f"Generated: {default_config}")
 
-print(f"Generating default config to: {config_file_path}")
-ProjectConfigManager.generate_default_config_file(config_file_path)
+doc_gen.generate_config_markdown_doc(output_file=default_config_doc)
+print(f"Generated: {default_config_doc}")
 
-print(f"Generating general config documentation to: {config_doc_path}")
-ProjectConfigManager.generate_config_markdown_doc(config_doc_path)
-
-print(f"Generating CLI documentation to: {cli_doc_path}")
-ProjectConfigManager.generate_cli_markdown_doc(
-    output_file=cli_doc_path,
-    cli_category_name="cli", # Ensure this matches your CLI config category
-    cli_entry_point="python -m my_project.cli" # Your project's actual CLI entry point
-)
+doc_gen.generate_cli_markdown_doc(output_file=default_cli_doc)
+print(f"Generated: {default_cli_doc}")
 
 print("Documentation and default config generation complete.")
 ```

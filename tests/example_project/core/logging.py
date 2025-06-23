@@ -12,7 +12,7 @@ import logging.handlers
 import sys
 from pathlib import Path
 
-from tests.example_project.config.config_example import ConfigParameterManager
+from tests.example_project.config.config_example import ProjectConfigManager
 
 
 class GuiLogHandler(logging.Handler):
@@ -39,7 +39,7 @@ class GuiLogHandler(logging.Handler):
 class LoggerManager:
     """Manages all logging configuration and handlers."""
 
-    def __init__(self, config: ConfigParameterManager):
+    def __init__(self, config: ProjectConfigManager):
         self.config = config
         self.logger = logging.getLogger("config_cli_gui")
         self.gui_handler = None
@@ -158,7 +158,7 @@ class LoggerManager:
 _logger_manager = None
 
 
-def initialize_logging(config: ConfigParameterManager) -> LoggerManager:
+def initialize_logging(config: ProjectConfigManager) -> LoggerManager:
     """Initialize the global logging system.
 
     Args:

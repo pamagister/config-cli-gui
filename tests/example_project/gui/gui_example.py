@@ -18,7 +18,7 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 from config_cli_gui.gui import SettingsDialogGenerator
-from tests.example_project.config.config_example import ConfigParameterManager
+from tests.example_project.config.config_example import ProjectConfigManager
 from tests.example_project.core.base import BaseGPXProcessor
 from tests.example_project.core.logging import (
     connect_gui_logging,
@@ -115,7 +115,7 @@ class MainGui:
         self.root.geometry("1200x600")  # Increased width for new layout
 
         # Initialize configuration
-        self._config = ConfigParameterManager("config.yaml")
+        self._config = ProjectConfigManager("config.yaml")
 
         # Initialize logging system
         self.logger_manager = initialize_logging(self._config)

@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 from config_cli_gui.docs import DocumentationGenerator
-from tests.example_project.config.config_example import ConfigParameterManager
+from tests.example_project.config.config_example import ProjectConfigManager
 
 
 class TestGenericCLI(unittest.TestCase):
@@ -25,7 +25,7 @@ class TestGenericCLI(unittest.TestCase):
         self.dummy_input.write_text("dummy input content")
 
         # Default config for testing
-        self.configManager = ConfigParameterManager()
+        self.configManager = ProjectConfigManager()
         self.default_cli_config = self.configManager.to_dict()["cli"]
 
     def tearDown(self):
@@ -65,13 +65,13 @@ class TestGenericCLI(unittest.TestCase):
         non_existent_file = self.temp_path / "does_not_exist.yaml"
 
         with self.assertRaises(FileNotFoundError):
-            ConfigParameterManager(config_file=str(non_existent_file))
+            ProjectConfigManager(config_file=str(non_existent_file))
 
     def test_generate_default_config_file(self):
         """Test generation of default configuration file."""
         output_file = self.temp_path / "default_config.yaml"
 
-        config_manager = ConfigParameterManager()
+        config_manager = ProjectConfigManager()
         docGen = DocumentationGenerator(config_manager)
         docGen.generate_default_config_file(str(output_file))
 
@@ -102,7 +102,7 @@ class TestGenericCLI(unittest.TestCase):
         """Test generation of CLI markdown documentation."""
         output_file = self.temp_path / "cli_doc_test.md"
 
-        config_manager = ConfigParameterManager()
+        config_manager = ProjectConfigManager()
         docGen = DocumentationGenerator(config_manager)
         docGen.generate_cli_markdown_doc(str(output_file))
 
