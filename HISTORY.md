@@ -2,8 +2,9 @@ Changelog
 =========
 
 
-(unreleased)
-------------
+0.1.5 (2025-11-12)
+------------------
+- Docs: Update HISTORY.md for release 0.1.5. [paul]
 - #8 switch to value instead of default. [paul]
 - #8 adjust doc: how to develop. [paul]
 - #8 allow direct access to attributes without get_category #8. [paul]
