@@ -269,7 +269,7 @@ class GenericSettingsDialog:
         parameters = category.get_parameters()
 
         for param in parameters:
-            param.default = getattr(category, param.name)
+            param.value = getattr(category, param.name)
             if param.required:
                 # Skip required parameters as they are not configurable in GUI
                 continue
@@ -300,27 +300,27 @@ class GenericSettingsDialog:
     def _create_parameter_widget(self, parent, param: ConfigParameter):
         """Create appropriate widget for parameter type."""
         # Boolean type - Checkbox
-        if isinstance(param.default, bool):
-            var = tk.BooleanVar(value=param.default)
+        if isinstance(param.value, bool):
+            var = tk.BooleanVar(value=param.value)
             widget = ttk.Checkbutton(parent, variable=var)
             widget.var = var
             return widget
 
         # Path type - File/Directory selector
-        elif isinstance(param.default, Path):
+        elif isinstance(param.value, Path):
             return self._create_path_widget(parent, param)
 
         # Color type - Color picker
-        elif isinstance(param.default, Color):
+        elif isinstance(param.value, Color):
             return self._create_color_widget(parent, param)
 
         # DateTime type - DateTime picker
-        elif isinstance(param.default, datetime):
+        elif isinstance(param.value, datetime):
             return self._create_datetime_widget(parent, param)
 
         # List/Tuple with choices - Combobox
-        elif param.choices and not isinstance(param.default, bool):
-            var = tk.StringVar(value=str(param.default))
+        elif param.choices and not isinstance(param.value, bool):
+            var = tk.StringVar(value=str(param.value))
             widget = ttk.Combobox(
                 parent, textvariable=var, values=list(param.choices), state="readonly"
             )
@@ -328,23 +328,23 @@ class GenericSettingsDialog:
             return widget
 
         # List/Tuple type - Multi-entry widget
-        elif isinstance(param.default, list) or isinstance(param.default, tuple):
+        elif isinstance(param.value, list) or isinstance(param.value, tuple):
             return self._create_list_widget(parent, param)
 
         # Dict type - Key-Value editor
-        elif isinstance(param.default, dict):
+        elif isinstance(param.value, dict):
             return self._create_dict_widget(parent, param)
 
         # Integer type - Spinbox
-        elif isinstance(param.default, int):
-            var = tk.IntVar(value=param.default)
+        elif isinstance(param.value, int):
+            var = tk.IntVar(value=param.value)
             widget = ttk.Spinbox(parent, from_=-999999, to=999999, textvariable=var)
             widget.var = var
             return widget
 
         # Float type - Spinbox
-        elif isinstance(param.default, float):
-            var = tk.DoubleVar(value=param.default)
+        elif isinstance(param.value, float):
+            var = tk.DoubleVar(value=param.value)
             widget = ttk.Spinbox(
                 parent, from_=-999999.0, to=999999.0, increment=1.0, textvariable=var
             )
@@ -353,7 +353,7 @@ class GenericSettingsDialog:
 
         # Default: String type - Entry
         else:
-            var = tk.StringVar(value=str(param.default))
+            var = tk.StringVar(value=str(param.value))
             widget = ttk.Entry(parent, textvariable=var)
             widget.var = var
             return widget
@@ -362,15 +362,15 @@ class GenericSettingsDialog:
         """Create file/directory selector widget."""
         frame = ttk.Frame(parent)
 
-        var = tk.StringVar(value=str(param.default))
+        var = tk.StringVar(value=str(param.value))
         entry = ttk.Entry(frame, textvariable=var)
         entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         def browse_file():
-            if param.default.is_dir() if isinstance(param.default, Path) else False:
-                path = filedialog.askdirectory(initialdir=str(param.default.parent))
+            if param.value.is_dir() if isinstance(param.value, Path) else False:
+                path = filedialog.askdirectory(initialdir=str(param.value.parent))
             else:
-                path = filedialog.askopenfilename(initialdir=str(param.default.parent))
+                path = filedialog.askopenfilename(initialdir=str(param.value.parent))
             if path:
                 var.set(path)
 
@@ -385,7 +385,7 @@ class GenericSettingsDialog:
         """Create color picker widget."""
         frame = ttk.Frame(parent)
 
-        color_value = param.default if isinstance(param.default, Color) else Color()
+        color_value = param.value if isinstance(param.value, Color) else Color()
         var = tk.StringVar(value=color_value.to_hex())
 
         entry = ttk.Entry(frame, textvariable=var, width=10)
@@ -419,7 +419,7 @@ class GenericSettingsDialog:
         """Create datetime picker widget."""
         frame = ttk.Frame(parent)
 
-        dt_value = param.default if isinstance(param.default, datetime) else datetime.now()
+        dt_value = param.value if isinstance(param.value, datetime) else datetime.now()
         var = tk.StringVar(value=dt_value.strftime("%Y-%m-%d %H:%M"))
 
         entry = ttk.Entry(frame, textvariable=var)
@@ -443,10 +443,10 @@ class GenericSettingsDialog:
         frame = ttk.Frame(parent)
 
         # Convert list/tuple to comma-separated string
-        if isinstance(param.default, (list | tuple)):
-            value_str = ", ".join(str(item) for item in param.default)
+        if isinstance(param.value, (list | tuple)):
+            value_str = ", ".join(str(item) for item in param.value)
         else:
-            value_str = str(param.default)
+            value_str = str(param.value)
 
         var = tk.StringVar(value=value_str)
         entry = ttk.Entry(frame, textvariable=var)
@@ -463,12 +463,12 @@ class GenericSettingsDialog:
         frame = ttk.Frame(parent)
 
         # Convert dict to JSON-like string
-        if isinstance(param.default, dict):
+        if isinstance(param.value, dict):
             import json
 
-            value_str = json.dumps(param.default, indent=None, separators=(",", ":"))
+            value_str = json.dumps(param.value, indent=None, separators=(",", ":"))
         else:
-            value_str = str(param.default)
+            value_str = str(param.value)
 
         var = tk.StringVar(value=value_str)
         entry = ttk.Entry(frame, textvariable=var)

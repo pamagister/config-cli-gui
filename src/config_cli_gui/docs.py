@@ -33,12 +33,12 @@ class DocumentationGenerator:
 
             for param in category.get_parameters():
                 name = param.name
-                typ = type(param.default).__name__
+                typ = type(param.value).__name__
                 desc = param.help
-                default = repr(param.default)
+                value = repr(param.value)
                 choices = str(param.choices) if param.choices else "-"
 
-                rows.append((name, typ, desc, default, choices))
+                rows.append((name, typ, desc, value, choices))
 
             if not rows:
                 continue
@@ -85,17 +85,15 @@ class DocumentationGenerator:
 
         for param in cli_params:
             cli_arg = f"`--{param.name}`" if not param.required else f"`{param.name}`"
-            typ = type(param.default).__name__
+            typ = type(param.value).__name__
             desc = param.help
-            default = (
-                "*required*"
-                if param.required or param.default in (None, "")
-                else repr(param.default)
+            value = (
+                "*required*" if param.required or param.value in (None, "") else repr(param.value)
             )
             choices = str(param.choices) if param.choices else "-"
 
-            rows.append((cli_arg, typ, desc, default, choices))
-            if default == "*required*":
+            rows.append((cli_arg, typ, desc, value, choices))
+            if value == "*required*":
                 required_params.append(param)
             else:
                 optional_params.append(param)
@@ -165,7 +163,7 @@ class DocumentationGenerator:
         for i, param in enumerate(optional_params[:3], 4):
             if param.name in ["verbose", "quiet"]:
                 continue
-            example_value = param.choices[0] if param.choices else param.default
+            example_value = param.choices[0] if param.choices else param.value
             examples.append(
                 dedent(f"""
                 ### {i}. With {param.name} parameter

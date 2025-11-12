@@ -47,18 +47,18 @@ class TestGenericCLI(unittest.TestCase):
         for param in self.configManager.get_cli_parameters():
             with self.subTest(parameter=param.name):
                 self.assertIsInstance(param.name, str)
-                self.assertIsInstance(type(param.default), type)
+                self.assertIsInstance(type(param.value), type)
                 self.assertIsInstance(param.help, str)
                 self.assertGreater(len(param.help), 0, "Help text should not be empty")
 
-                # Check if default value matches type
-                if param.default is not None and param.default != "":
-                    if type(param.default) == bool:
-                        self.assertIsInstance(param.default, bool)
-                    elif type(param.default) == int:
-                        self.assertIsInstance(param.default, int)
-                    elif type(param.default) == str:
-                        self.assertIsInstance(param.default, str)
+                # Check if value matches type
+                if param.value is not None and param.value != "":
+                    if type(param.value) == bool:
+                        self.assertIsInstance(param.value, bool)
+                    elif type(param.value) == int:
+                        self.assertIsInstance(param.value, int)
+                    elif type(param.value) == str:
+                        self.assertIsInstance(param.value, str)
 
     def test_config_file_not_found(self):
         """Test handling of non-existent config file."""

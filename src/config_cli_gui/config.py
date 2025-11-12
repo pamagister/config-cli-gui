@@ -48,7 +48,7 @@ class ConfigParameter:
     """Represents a single configuration parameter with all its metadata."""
 
     name: str
-    default: Any
+    value: Any
     choices: list | tuple | None = None
     help: str = ""
     cli_arg: str = None
@@ -59,21 +59,13 @@ class ConfigParameter:
     def __post_init__(self):
         if self.is_cli and self.cli_arg is None and not self.required:
             self.cli_arg = f"--{self.name}"
-        if isinstance(self.default, bool) and self.choices is None:
+        if isinstance(self.value, bool) and self.choices is None:
             self.choices = [True, False]
 
     @property
     def type_(self) -> type:
-        """Get the type from the default value."""
-        return type(self.default)
-
-    def get_value(self) -> Any:
-        """Return the current value of this parameter."""
-        return self.default
-
-    def set_value(self, value: Any):
-        """Set the value of this parameter."""
-        self.default = value
+        """Get the type from the value."""
+        return type(self.value)
 
 
 class ConfigCategory(BaseModel, ABC):
@@ -92,16 +84,6 @@ class ConfigCategory(BaseModel, ABC):
                 param.category = self.get_category_name()
                 parameters.append(param)
         return parameters
-
-    def __getattribute__(self, name: str) -> Any:
-        """Return ConfigParameter values directly."""
-        try:
-            attr = super().__getattribute__(name)
-        except AttributeError:
-            raise
-        if isinstance(attr, ConfigParameter):
-            return attr.default  # Return actual value
-        return attr
 
 
 class ConfigManager:
@@ -207,7 +189,7 @@ class ConfigManager:
         for name, category in self._categories.items():
             category_dict = {}
             for param in category.get_parameters():
-                value = getattr(category, param.name)
+                value = getattr(category, param.name).value
                 if isinstance(value, Color):
                     value = value.to_list()
                 elif isinstance(value, Path):
@@ -255,7 +237,7 @@ class ConfigManager:
                             indent = " " * (len(line) - len(stripped))
                             comment = (
                                 f"{indent}# {param.help} | "
-                                f"type={type(param.default).__name__}, default={param.default}"
+                                f"type={type(param.value).__name__}, default value={param.value}"
                                 f"{' [CLI]' if param.is_cli else ''}"
                             )
                             new_lines.append(comment)

@@ -454,10 +454,10 @@ class MainGui:
             # Create and run project
             project = BaseGPXProcessor(
                 files_to_process,  # Pass selected files
-                self._config.get_category("cli").output,
-                self._config.get_category("cli").min_dist,
-                self._config.get_category("app").date_format,
-                self._config.get_category("cli").elevation,
+                self._config.cli.output,
+                self._config.cli.min_dist,
+                self._config.app.date_format,
+                self._config.cli.elevation,
                 self.logger,
             )
             # implement switch case for different processing modes
@@ -504,7 +504,7 @@ class MainGui:
         if dialog.result == "ok":
             self.logger.info("Settings updated successfully")
             # Update log level selector if it changed
-            self.log_level_var.set(self._config.get_category("app").log_level)
+            self.log_level_var.set(self._config.app.log_level)
 
     def _open_help(self):
         """Open help documentation in browser."""
