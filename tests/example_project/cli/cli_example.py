@@ -32,11 +32,11 @@ def run_main_processing(_config: ConfigManager) -> int:
 
         # Create and run BaseGPXProcessor
         processor = BaseGPXProcessor(
-            _config.get_category("cli").input.default,
-            _config.get_category("cli").output.default,
-            _config.get_category("cli").min_dist.default,
-            _config.get_category("app").date_format.default,
-            _config.get_category("cli").elevation.default,
+            _config.get_category("cli").input,
+            _config.get_category("cli").output,
+            _config.get_category("cli").min_dist,
+            _config.get_category("app").date_format,
+            _config.get_category("cli").elevation,
             logger=logger,
         )
 

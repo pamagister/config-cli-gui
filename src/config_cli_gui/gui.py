@@ -8,6 +8,7 @@ from pathlib import Path
 from tkinter import colorchooser, filedialog, messagebox, ttk
 
 from config_cli_gui.config import Color, ConfigManager, ConfigParameter
+from src.config_cli_gui.config import ConfigCategory
 
 
 class ToolTip:
@@ -263,12 +264,13 @@ class GenericSettingsDialog:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-    def _add_category_parameters(self, parent, category_name: str, category):
+    def _add_category_parameters(self, parent, category_name: str, category: ConfigCategory):
         """Add parameter widgets for a specific category."""
         row = 0
         parameters = category.get_parameters()
 
         for param in parameters:
+            param.default = getattr(category, param.name)
             if param.required:
                 # Skip required parameters as they are not configurable in GUI
                 continue
@@ -493,26 +495,26 @@ class GenericSettingsDialog:
                 param = getattr(category, param_name)
 
                 # Convert value to appropriate type
-                if type(param.default) == bool:
+                if type(param) == bool:
                     overrides[key] = value
-                elif type(param.default) == Path:
+                elif type(param) == Path:
                     overrides[key] = Path(value)
-                elif type(param.default) == Color:
+                elif type(param) == Color:
                     overrides[key] = Color.from_hex(value)
-                elif type(param.default) == datetime:
+                elif type(param) == datetime:
                     overrides[key] = datetime.strptime(value, "%Y-%m-%d %H:%M")
-                elif type(param.default) in (list, tuple):
+                elif type(param) in (list, tuple):
                     # Parse comma-separated values
                     items = [item.strip() for item in value.split(",") if item.strip()]
-                    overrides[key] = type(param.default)(items)
-                elif type(param.default) == dict:
+                    overrides[key] = type(param)(items)
+                elif type(param) == dict:
                     # Parse JSON format
                     import json
 
                     overrides[key] = json.loads(value)
-                elif type(param.default) == int:
+                elif type(param) == int:
                     overrides[key] = int(value)
-                elif type(param.default) == float:
+                elif type(param) == float:
                     overrides[key] = float(value)
                 else:
                     overrides[key] = value

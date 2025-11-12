@@ -189,11 +189,15 @@ class MiscConfig(ConfigCategory):
 class ProjectConfigManager(ConfigManager):  # Inherit from ConfigManager
     """Main configuration manager that handles all parameter categories."""
 
-    categories = (CliConfig(), AppConfig(), GuiConfig(), MiscConfig())
+    cli: CliConfig
+    app: AppConfig
+    gui: GuiConfig
+    misc: MiscConfig
 
     def __init__(self, config_file: str | None = None, **kwargs):
         """Initialize the configuration manager with all parameter categories."""
-        super().__init__(self.categories, config_file, **kwargs)
+        categories = (CliConfig(), AppConfig(), GuiConfig(), MiscConfig())
+        super().__init__(categories, config_file, **kwargs)
 
 
 def main():

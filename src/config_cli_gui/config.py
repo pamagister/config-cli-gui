@@ -67,24 +67,41 @@ class ConfigParameter:
         """Get the type from the default value."""
         return type(self.default)
 
+    def get_value(self) -> Any:
+        """Return the current value of this parameter."""
+        return self.default
+
+    def set_value(self, value: Any):
+        """Set the value of this parameter."""
+        self.default = value
+
 
 class ConfigCategory(BaseModel, ABC):
     """Base class for configuration categories."""
 
     @abstractmethod
     def get_category_name(self) -> str:
-        """Return the category name for this configuration group."""
         pass
 
     def get_parameters(self) -> list[ConfigParameter]:
         """Get all ConfigParameter objects from this category."""
         parameters = []
         for field_name in self.__class__.model_fields:
-            param = getattr(self, field_name)
+            param = self.model_fields[field_name].default
             if isinstance(param, ConfigParameter):
                 param.category = self.get_category_name()
                 parameters.append(param)
         return parameters
+
+    def __getattribute__(self, name: str) -> Any:
+        """Return ConfigParameter values directly."""
+        try:
+            attr = super().__getattribute__(name)
+        except AttributeError:
+            raise
+        if isinstance(attr, ConfigParameter):
+            return attr.default  # Return actual value
+        return attr
 
 
 class ConfigManager:
@@ -99,19 +116,18 @@ class ConfigManager:
         """
         self._categories: dict[str, ConfigCategory] = {}
 
+        # Register categories and make accessible as attributes
         for category in categories:
-            if isinstance(category, ConfigCategory):
-                self.add_category(category.get_category_name(), category)
-            else:
+            if not isinstance(category, ConfigCategory):
                 raise TypeError(
-                    f"Category must be an instance of BaseConfigCategory, got {type(category)}"
+                    f"Category must be an instance of ConfigCategory, got {type(category)}"
                 )
+            name = category.get_category_name()
+            self.add_category(name, category)
 
-        # Load from file if provided
         if config_file:
             self.load_from_file(config_file)
 
-        # Override with provided kwargs
         self._apply_kwargs(kwargs)
 
     def add_category(self, name: str, category: ConfigCategory):
@@ -122,58 +138,46 @@ class ConfigManager:
             category: Configuration category instance
         """
         self._categories[name] = category
+        setattr(self, name, category)
 
     def get_category(self, name: str) -> ConfigCategory:
-        """Get a configuration category by name."""
         return self._categories.get(name)
 
     def _apply_kwargs(self, kwargs: dict[str, Any]):
-        """Apply keyword arguments to override configuration values."""
+        """Apply keyword overrides: category__param=value"""
         for key, value in kwargs.items():
             if "__" in key:
                 category_name, param_name = key.split("__", 1)
                 if category_name in self._categories:
                     category = self._categories[category_name]
                     if hasattr(category, param_name):
-                        param = getattr(category, param_name)
-                        if isinstance(param, ConfigParameter):
-                            param.default = value
+                        setattr(category, param_name, value)
 
     def load_from_file(self, config_file: str):
-        """Load configuration from JSON or YAML file."""
-        config_path = Path(config_file)
-        if not config_path.exists():
+        path = Path(config_file)
+        if not path.exists():
             raise FileNotFoundError(f"Configuration file not found: {config_file}")
+        with open(path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f) if path.suffix in [".yml", ".yaml"] else json.load(f)
+        self._apply_config_data(data)
 
-        with open(config_path, "r", encoding="utf-8") as f:
-            if config_path.suffix.lower() in [".yml", ".yaml"]:
-                config_data = yaml.safe_load(f)
-            else:
-                config_data = json.load(f)
-
-        # Store loaded data for later application
-        self._apply_config_data(config_data)
-
-    def _apply_config_data(self, _loaded_config_data):
-        """Apply configuration data to categories."""
-
-        # Apply loaded configuration
-        for category_name, category_data in _loaded_config_data.items():
-            if category_name in self._categories:
-                category = self._categories[category_name]
-                for param_name, param_value in category_data.items():
-                    if hasattr(category, param_name):
-                        param = getattr(category, param_name)
-                        if isinstance(param, ConfigParameter):
-                            # Handle special types
-                            if isinstance(param.default, Color) and isinstance(param_value, list):
-                                param.default = Color.from_list(param_value)
-                            elif isinstance(param.default, Path):
-                                param.default = Path(param_value)
-                            elif isinstance(param.default, datetime):
-                                param.default = datetime.fromisoformat(param_value)
-                            else:
-                                param.default = param_value
+    def _apply_config_data(self, data: dict):
+        for category_name, category_data in data.items():
+            category = self._categories.get(category_name)
+            if not category:
+                continue
+            for param_name, param_value in category_data.items():
+                if hasattr(category, param_name):
+                    param = category.model_fields.get(param_name).default
+                    if isinstance(param, ConfigParameter):
+                        default_value = getattr(category, param_name)
+                        if isinstance(default_value, Color) and isinstance(param_value, list):
+                            param_value = Color.from_list(param_value)
+                        elif isinstance(default_value, Path):
+                            param_value = Path(param_value)
+                        elif isinstance(default_value, datetime):
+                            param_value = datetime.fromisoformat(param_value)
+                        setattr(getattr(self, category_name), param_name, param_value)
 
     def save_to_file(self, config_file: str, format_: str = "auto"):
         """Save current configuration to file with enhanced YAML formatting and comments.
@@ -182,34 +186,28 @@ class ConfigManager:
             config_file (str): The path to the configuration file.
             format_ (str): The format to save the file in ('auto', 'json', 'yaml').
         """
-        config_path = Path(config_file)
-        config_data = self.to_dict()
+        path = Path(config_file)
+        data = self.to_dict()
 
-        # Determine format
         if format_ == "auto":
-            format_ = "yaml" if config_path.suffix.lower() in [".yml", ".yaml"] else "json"
+            format_ = "yaml" if path.suffix in [".yml", ".yaml"] else "json"
 
-        # Ensure directory exists
-        config_path.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(config_path, "w", encoding="utf-8") as f:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
             if format_ == "yaml":
-                yaml.dump(config_data, f, default_flow_style=False, indent=2)
+                yaml.dump(data, f, indent=2)
             else:
-                json.dump(config_data, f, indent=2)
+                json.dump(data, f, indent=2)
 
-        # Append comments for YAML files
         if format_ == "yaml":
-            self._append_comments_to_yaml(config_path)
+            self._append_comments_to_yaml(path)
 
     def to_dict(self) -> dict[str, Any]:
-        """Convert configuration to dictionary."""
         result = {}
-        for category_name, category in self._categories.items():
+        for name, category in self._categories.items():
             category_dict = {}
             for param in category.get_parameters():
-                value = param.default
-                # Handle special types for serialization
+                value = getattr(category, param.name)
                 if isinstance(value, Color):
                     value = value.to_list()
                 elif isinstance(value, Path):
@@ -217,64 +215,49 @@ class ConfigManager:
                 elif isinstance(value, datetime):
                     value = value.isoformat()
                 category_dict[param.name] = value
-            result[category_name] = category_dict
+            result[name] = category_dict
         return result
 
     def get_all_parameters(self) -> list[ConfigParameter]:
-        """Get all parameters from all categories."""
-        parameters = []
-        for category in self._categories.values():
-            parameters.extend(category.get_parameters())
-        return parameters
+        return [p for c in self._categories.values() for p in c.get_parameters()]
 
     def get_cli_parameters(self) -> list[ConfigParameter]:
-        """Get parameters that are CLI-enabled."""
-        cli_parameters = []
-        for category in self._categories.values():
-            for param in category.get_parameters():
-                if param.is_cli:
-                    cli_parameters.append(param)
-        return cli_parameters
+        return [p for p in self.get_all_parameters() if p.is_cli]
 
-    def _append_comments_to_yaml(self, config_path: Path):
+    def _append_comments_to_yaml(self, path: Path):
         """Appends comments to a YAML file based on ConfigParameter metadata.
 
         Args:
             config_path (Path): The path to the YAML configuration file.
         """
-        lines = config_path.read_text(encoding="utf-8").splitlines()
+
+        lines = path.read_text(encoding="utf-8").splitlines()
         new_lines = []
         all_parameters = {param.name: param for param in self.get_all_parameters()}
         current_category = None
 
         for line in lines:
-            stripped_line = line.strip()
-            # Check for category (e.g., 'app:')
-            # A category should end with ':', not start with '#', and not be indented.
+            stripped = line.strip()
             if (
-                stripped_line.endswith(":")
-                and not stripped_line.startswith("#")
-                and line.startswith(stripped_line)
+                stripped.endswith(":")
+                and not stripped.startswith("#")
+                and line.startswith(stripped)
             ):
-                current_category = stripped_line[:-1]
+                current_category = stripped[:-1]
                 new_lines.append(line)
             else:
-                # Check for parameter (e.g., '  date_format: '%Y-%m-%d'')
-                # This needs to handle cases where the value spans multiple lines
-                parts = stripped_line.split(":", 1)
-                if len(parts) > 1:  # This line might be a parameter definition
+                parts = stripped.split(":", 1)
+                if len(parts) > 1:
                     param_name = parts[0].strip()
                     if param_name in all_parameters:
                         param = all_parameters[param_name]
-                        # Ensure the parameter belongs to the current category
-                        # and is not a sub-item of a multi-line value
                         if current_category and param.category == current_category:
-                            comment_indent = " " * (len(line) - len(stripped_line))
+                            indent = " " * (len(line) - len(stripped))
                             comment = (
-                                f"{comment_indent}# {param.help} | "
+                                f"{indent}# {param.help} | "
                                 f"type={type(param.default).__name__}, default={param.default}"
                                 f"{' [CLI]' if param.is_cli else ''}"
                             )
                             new_lines.append(comment)
                 new_lines.append(line)
-        config_path.write_text("\n".join(new_lines), encoding="utf-8")
+        path.write_text("\n".join(new_lines), encoding="utf-8")
