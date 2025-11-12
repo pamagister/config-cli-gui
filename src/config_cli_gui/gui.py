@@ -7,8 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import colorchooser, filedialog, messagebox, ttk
 
-from config_cli_gui.config import Color, ConfigManager, ConfigParameter
-from src.config_cli_gui.config import ConfigCategory
+from config_cli_gui.config import Color, ConfigCategory, ConfigManager, ConfigParameter
 
 
 class ToolTip:

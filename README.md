@@ -30,6 +30,11 @@ You can install `config-cli-gui` using pip:
 pip install config-cli-gui
 ```
 
+## Contribution
+
+Refer to this how-to in the referenced project for getting started to install and develop on this project:
+https://github.com/pamagister/python-template-project
+
 ---
 
 ## ✨ Features
