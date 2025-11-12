@@ -189,7 +189,7 @@ class ConfigManager:
         for name, category in self._categories.items():
             category_dict = {}
             for param in category.get_parameters():
-                value = getattr(category, param.name).value
+                value = getattr(category, param.name)
                 if isinstance(value, Color):
                     value = value.to_list()
                 elif isinstance(value, Path):
