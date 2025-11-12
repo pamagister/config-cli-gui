@@ -2,6 +2,16 @@ Changelog
 =========
 
 
+(unreleased)
+------------
+- #8 troubleshoot git make release issue. [Paul Magister]
+
+
+0.1.7 (2025-11-12)
+------------------
+- Docs: Update HISTORY.md for release 0.1.7. [Paul Magister]
+
+
 0.1.6 (2025-11-12)
 ------------------
 - Docs: Update HISTORY.md for release 0.1.6. [Paul Magister]
