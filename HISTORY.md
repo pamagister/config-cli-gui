@@ -4,6 +4,18 @@ Changelog
 
 (unreleased)
 ------------
+- #8 switch to value instead of default. [paul]
+- #8 adjust doc: how to develop. [paul]
+- #8 allow direct access to attributes without get_category #8. [paul]
+
+
+0.1.4 (2025-06-23)
+------------------
+- Feat #5: extensive renaming. [Paul Magister]
+
+
+0.1.3 (2025-06-23)
+------------------
 - Update README.md from docs/index.md. [github-actions]
 - Feat #5: extensive renaming and adjustments. [Paul Magister]
 - Feat #5: extensive renaming. [Paul Magister]
@@ -46,5 +58,14 @@ Changelog
 0.0.2 (2025-06-22)
 ------------------
 - Remove _version.py. [Paul Magister]
+
+
+0.0.1 (2025-06-22)
+------------------
+- Fix fmt. [Paul Magister]
+- Doc update. [Paul Magister]
+- First actual commit: cleanup. [Paul Magister]
+- ✅ Project renamed from template. [github-actions[bot]]
+- Initial commit. [Paul Magister]
 
 
