@@ -2,6 +2,11 @@ Changelog
 =========
 
 
+0.1.6 (2025-11-12)
+------------------
+- Docs: Update HISTORY.md for release 0.1.6. [Paul Magister]
+
+
 0.1.5 (2025-11-12)
 ------------------
 - Docs: Update HISTORY.md for release 0.1.5. [paul]
