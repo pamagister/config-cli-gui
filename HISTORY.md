@@ -4,6 +4,13 @@ Changelog
 
 (unreleased)
 ------------
+- #9 fix posix path issue. [Paul Magister]
+- #9 fix posix path issue. [Paul Magister]
+
+
+0.1.10 (2025-11-13)
+-------------------
+- Docs: Update HISTORY.md for release 0.1.10. [Paul Magister]
 - #9 unittests docs.py. [Paul Magister]
 - #9 unittests config.py. [Paul Magister]
 - #9 roll back to .value usage to be type save: documentation. [Paul
