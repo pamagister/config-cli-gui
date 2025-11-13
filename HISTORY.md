@@ -4,6 +4,16 @@ Changelog
 
 (unreleased)
 ------------
+- #9 unittests docs.py. [Paul Magister]
+- #9 unittests config.py. [Paul Magister]
+- #9 roll back to .value usage to be type save: documentation. [Paul
+  Magister]
+- #9 roll back to .value usage to be type save. [Paul Magister]
+
+
+0.1.9 (2025-11-12)
+------------------
+- Docs: Update HISTORY.md for release 0.1.9. [Paul Magister]
 - #8 fix bug with .value. [Paul Magister]
 
 
