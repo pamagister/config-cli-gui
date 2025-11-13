@@ -258,18 +258,19 @@ class GenericSettingsDialog:
         canvas.configure(yscrollcommand=scrollbar.set)
 
         # Add parameters
-        self._add_category_parameters(scrollable_frame, category_name, category)
+        self._add_category_parameters(scrollable_frame, category)
 
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-    def _add_category_parameters(self, parent, category_name: str, category: ConfigCategory):
+    def _add_category_parameters(self, parent, category: ConfigCategory):
         """Add parameter widgets for a specific category."""
         row = 0
+        category_name: str = category.get_category_name()
         parameters = category.get_parameters()
 
         for param in parameters:
-            param.value = getattr(category, param.name)
+            param.value = getattr(category, param.name).value
             if param.required:
                 # Skip required parameters as they are not configurable in GUI
                 continue
@@ -391,8 +392,8 @@ class GenericSettingsDialog:
         entry = ttk.Entry(frame, textvariable=var, width=10)
         entry.pack(side=tk.LEFT)
 
-        color_display = tk.Label(frame, width=7, bg=color_value.to_hex())
-        color_display.pack(side=tk.LEFT, padx=(5, 0))
+        color_display = tk.Label(frame, width=8, bg=color_value.to_hex())
+        color_display.pack(side=tk.LEFT, padx=(8, 2))
 
         def pick_color():
             color = colorchooser.askcolor(color=var.get())
@@ -491,35 +492,35 @@ class GenericSettingsDialog:
                 # Parse value based on parameter type
                 category_name, param_name = key.split("__", 1)
                 category = self.config_manager.get_category(category_name)
-                param = getattr(category, param_name)
+                param_value = getattr(category, param_name).value
 
                 # Convert value to appropriate type
-                if type(param) == bool:
+                if type(param_value) == bool:
                     overrides[key] = value
-                elif type(param) == Path:
+                elif type(param_value) == Path:
                     overrides[key] = Path(value)
-                elif type(param) == Color:
+                elif type(param_value) == Color:
                     overrides[key] = Color.from_hex(value)
-                elif type(param) == datetime:
+                elif type(param_value) == datetime:
                     overrides[key] = datetime.strptime(value, "%Y-%m-%d %H:%M")
-                elif type(param) in (list, tuple):
+                elif type(param_value) in (list, tuple):
                     # Parse comma-separated values
                     items = [item.strip() for item in value.split(",") if item.strip()]
-                    overrides[key] = type(param)(items)
-                elif type(param) == dict:
+                    overrides[key] = type(param_value)(items)
+                elif type(param_value) == dict:
                     # Parse JSON format
                     import json
 
                     overrides[key] = json.loads(value)
-                elif type(param) == int:
+                elif type(param_value) == int:
                     overrides[key] = int(value)
-                elif type(param) == float:
+                elif type(param_value) == float:
                     overrides[key] = float(value)
                 else:
                     overrides[key] = value
 
             # Apply overrides to config manager
-            self.config_manager._apply_kwargs(overrides)
+            self.config_manager.apply_overrides(overrides)
 
             # Save to file
             self.config_manager.save_to_file(self.config_file)

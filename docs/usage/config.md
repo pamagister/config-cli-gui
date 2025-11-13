@@ -43,5 +43,5 @@ The parameters in the cli category can be accessed via the command line interfac
 |------------|-----------|-----------------------------------|-----------------------------------------------------|---------|
 | some_file  | PosixPath | Path to the file to use           | PosixPath('some_file.txt')                          | -       |
 | some_color | Color     | Color setting for the application | Color(255, 0, 0)                                    | -       |
-| some_date  | datetime  | Date setting for the application  | datetime.datetime(2025, 11, 12, 22, 24, 14, 121460) | -       |
+| some_date  | datetime  | Date setting for the application  | datetime.datetime(2025, 11, 13, 22, 49, 38, 801511) | -       |
 

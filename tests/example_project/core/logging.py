@@ -53,7 +53,7 @@ class LoggerManager:
         self.logger.handlers.clear()
 
         # Set log level from config
-        log_level = getattr(logging, self.config.app.log_level.upper())
+        log_level = getattr(logging, self.config.app.log_level.value.upper())
         self.logger.setLevel(log_level)
 
         # Create formatters
@@ -142,15 +142,15 @@ class LoggerManager:
         self.logger.setLevel(log_level)
 
         # Update config
-        self.config.get_category("app").log_level = level.upper()
+        self.config.app.log_level.value = level.upper()
 
     def log_config_summary(self):
         """Log current configuration summary."""
         self.logger.info("=== Configuration Summary ===")
-        self.logger.info(f"Log level: {self.config.app.log_level}")
-        self.logger.info(f"Input: {self.config.cli.input}")
-        self.logger.info(f"Output: {self.config.get_category('cli').output}")
-        self.logger.info(f"Max workers: {self.config.app.max_workers}")
+        self.logger.info(f"Log level: {self.config.app.log_level.value}")
+        self.logger.info(f"Input: {self.config.cli.input.value}")
+        self.logger.info(f"Output: {self.config.cli.output.value}")
+        self.logger.info(f"Max workers: {self.config.app.max_workers.value}")
         self.logger.info("==============================")
 
 

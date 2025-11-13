@@ -130,7 +130,7 @@ class CliGenerator:
                 updated_config.add_category(name, category)
 
             # Apply overrides again after copying categories
-            updated_config._apply_kwargs(cli_overrides)
+            updated_config.apply_overrides(cli_overrides)
 
             # Try to get logger if logging is configured
             try:

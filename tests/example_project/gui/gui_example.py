@@ -241,7 +241,7 @@ class MainGui:
 
         # Log level selector
         ttk.Label(log_controls, text="Log Level:").pack(side=tk.LEFT, padx=(10, 5))
-        self.log_level_var = tk.StringVar(value=self._config.app.log_level)
+        self.log_level_var = tk.StringVar(value=self._config.app.log_level.value)
         log_level_combo = ttk.Combobox(
             log_controls,
             textvariable=self.log_level_var,
@@ -454,10 +454,10 @@ class MainGui:
             # Create and run project
             project = BaseGPXProcessor(
                 files_to_process,  # Pass selected files
-                self._config.cli.output,
-                self._config.cli.min_dist,
-                self._config.app.date_format,
-                self._config.cli.elevation,
+                self._config.cli.output.value,
+                self._config.cli.min_dist.value,
+                self._config.app.date_format.value,
+                self._config.cli.elevation.value,
                 self.logger,
             )
             # implement switch case for different processing modes
@@ -504,7 +504,7 @@ class MainGui:
         if dialog.result == "ok":
             self.logger.info("Settings updated successfully")
             # Update log level selector if it changed
-            self.log_level_var.set(self._config.app.log_level)
+            self.log_level_var.set(self._config.app.log_level.value)
 
     def _open_help(self):
         """Open help documentation in browser."""
