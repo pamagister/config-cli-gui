@@ -196,7 +196,7 @@ class ConfigManager:
                 if isinstance(val, Color):
                     val = val.to_hex()
                 elif isinstance(val, Path):
-                    val = str(val)
+                    val = str(val.as_posix())
                 elif isinstance(val, datetime):
                     val = val.isoformat()
                 result[category_name][param.name] = val
