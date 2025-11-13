@@ -99,7 +99,7 @@ def test_load_from_json(tmp_path):
     ConfigManager((cat,), config_file=str(path))
 
     assert cat.bg_color.value.to_list() == [200, 100, 50]
-    assert str(cat.output_path.value) == "/tmp/test"
+    assert str(cat.output_path.value.as_posix()) == "/tmp/test"
     assert cat.count.value == 42
     assert cat.timestamp.value == datetime(2023, 5, 1, 10, 0, 0)
 
@@ -119,7 +119,7 @@ example:
     ConfigManager((cat,), config_file=str(path))
 
     assert cat.bg_color.value.to_list() == [100, 150, 200]
-    assert str(cat.output_path.value) == "/tmp/yamlpath"
+    assert str(cat.output_path.value.as_posix()) == "/tmp/yamlpath"
     assert cat.timestamp.value == datetime(2024, 2, 20, 12, 0, 0)
     assert cat.count.value == 7
 
