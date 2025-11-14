@@ -4,6 +4,11 @@ Changelog
 
 (unreleased)
 ------------
+- #9 cli: unittests. [Paul Magister]
+
+
+0.2.1 (2025-11-14)
+------------------
 - #9 Fix cli bugs: allow toggle or bool. [Paul Magister]
 - #9 Fix cli bugs. [Paul Magister]
 - #9 Fix problems and add ide configs. [Paul Magister]
