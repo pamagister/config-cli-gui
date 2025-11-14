@@ -4,13 +4,12 @@ This file uses the CliGenerator from the generic config framework.
 """
 
 from config_cli_gui.cli import CliGenerator
-from config_cli_gui.config import ConfigManager
 from tests.example_project.config.config_example import ProjectConfigManager
 from tests.example_project.core.base import BaseGPXProcessor
 from tests.example_project.core.logging import initialize_logging
 
 
-def run_main_processing(_config: ConfigManager) -> int:
+def run_main_processing(_config: ProjectConfigManager) -> int:
     """Main processing function that gets called by the CLI generator.
 
     Args:
@@ -32,11 +31,11 @@ def run_main_processing(_config: ConfigManager) -> int:
 
         # Create and run BaseGPXProcessor
         processor = BaseGPXProcessor(
-            _config.get_category("cli").input,
-            _config.get_category("cli").output,
-            _config.get_category("cli").min_dist,
-            _config.get_category("app").date_format,
-            _config.get_category("cli").elevation,
+            _config.cli.input.value,
+            _config.cli.output.value,
+            _config.cli.min_dist.value,
+            _config.app.date_format.value,
+            _config.cli.elevation.value,
             logger=logger,
         )
 
