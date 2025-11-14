@@ -56,7 +56,7 @@ class CliConfig(ConfigCategory):
 
     elevation: ConfigParameter = ConfigParameter(
         name="elevation",
-        value=True,
+        value=False,
         help="Include elevation data in waypoints",
         is_cli=True,
     )

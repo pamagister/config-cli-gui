@@ -10,172 +10,112 @@ from config_cli_gui.config import ConfigManager
 
 
 class CliGenerator:
-    """Generates CLI interface from ConfigManager."""
+    """Generates a CLI automatically from a ConfigManager."""
 
     def __init__(self, config_manager: ConfigManager, app_name: str = "app"):
         self.config_manager = config_manager
         self.app_name = app_name
 
+    # ----------------------------------------------------------------------
+    # Argument parser builder
+    # ----------------------------------------------------------------------
     def create_argument_parser(self, description: str = None) -> argparse.ArgumentParser:
-        """Create argument parser from configuration."""
         if description is None:
             description = f"Command line interface for {self.app_name}"
 
-        parser = argparse.ArgumentParser(
-            description=description,
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-        )
+        parser = argparse.ArgumentParser(description=description)
 
         # Config file argument
-        parser.add_argument(
-            "--config",
-            default=None,
-            help="Path to configuration file (JSON or YAML)",
-        )
+        parser.add_argument("--config", help="Path to configuration file")
 
-        # Verbose/quiet options for log level override
-        parser.add_argument(
-            "-v", "--verbose", action="store_true", help="Enable verbose logging (DEBUG level)"
-        )
-        parser.add_argument(
-            "-q", "--quiet", action="store_true", help="Enable quiet mode (WARNING level only)"
-        )
+        # verbosity
+        parser.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
+        parser.add_argument("-q", "--quiet", action="store_true", help="Quiet mode")
 
-        # Get CLI parameters
-        cli_params = self.config_manager.get_cli_parameters()
+        # CLI parameters
+        for p in self.config_manager.get_cli_parameters():
+            if p.required:  # POSITONAL ARGUMENT
+                parser.add_argument(p.name, help=p.help)
+                continue
 
-        # Generate arguments from CLI config parameters
-        for param in cli_params:
-            param_type = type(param.value)
+            # OPTIONAL FLAG
+            kwargs = {
+                "help": f"{p.help} (default: {p.value})",
+                "default": argparse.SUPPRESS,
+            }
 
-            if param.required and param.cli_arg is None:
-                # Positional argument
-                parser.add_argument(param.name, help=param.help)
+            if isinstance(p.value, bool):
+                kwargs["action"] = "store_true" if not p.value else "store_false"
             else:
-                # Optional argument
-                kwargs = {
-                    "default": argparse.SUPPRESS,
-                    "help": f"{param.help} (default: {param.value})",
-                }
+                kwargs["type"] = type(p.value)
+                if p.choices:
+                    kwargs["choices"] = p.choices
 
-                # Handle different parameter types
-                if param.choices and param_type != bool:
-                    kwargs["choices"] = param.choices
-
-                if param_type == int:
-                    kwargs["type"] = int
-                elif param_type == float:
-                    kwargs["type"] = float
-                elif param_type == bool:
-                    kwargs["action"] = "store_true" if not param.value else "store_false"
-                    kwargs["help"] = f"{param.help} (default: {param.value})"
-                elif param_type == str:
-                    kwargs["type"] = str
-
-                parser.add_argument(param.cli_arg, **kwargs)
+            parser.add_argument(p.cli_arg, **kwargs)
 
         return parser
 
+    # ----------------------------------------------------------------------
+    # convert args → config overrides
+    # ----------------------------------------------------------------------
     def create_config_overrides(self, args: argparse.Namespace) -> dict[str, Any]:
-        """Create configuration overrides from CLI arguments."""
-        cli_params = self.config_manager.get_cli_parameters()
         overrides = {}
 
-        for param in cli_params:
-            if hasattr(args, param.name):
-                arg_value = getattr(args, param.name)
-                # Add CLI category prefix for override system
-                overrides[f"cli__{param.name}"] = arg_value
+        for p in self.config_manager.get_cli_parameters():
+            if hasattr(args, p.name):
+                overrides[f"{p.category}__{p.name}"] = getattr(args, p.name)
 
-        # Handle log level overrides from verbose/quiet flags
-        if hasattr(args, "verbose") and args.verbose:
+        if getattr(args, "verbose", False):
             overrides["app__log_level"] = "DEBUG"
-        elif hasattr(args, "quiet") and args.quiet:
+        elif getattr(args, "quiet", False):
             overrides["app__log_level"] = "WARNING"
 
         return overrides
 
+    # ----------------------------------------------------------------------
+    # Main CLI runner
+    # ----------------------------------------------------------------------
     def run_cli(
         self,
         main_function: Callable[[ConfigManager], int],
         description: str = None,
         validator: Callable[[ConfigManager], bool] = None,
     ) -> int:
-        """Run the CLI application with error handling.
+        parser = self.create_argument_parser(description)
+        args = parser.parse_args()
 
-        Args:
-            main_function: Function that takes ConfigManager and returns exit code
-            description: CLI description
-            validator: Optional function to validate configuration
+        # Load config_file only ONCE
+        config = ConfigManager(
+            categories=tuple(self.config_manager._categories.values()),
+            config_file=getattr(args, "config", None),
+        )
 
-        Returns:
-            Exit code
-        """
-        logger = None
+        # Apply CLI overrides
+        overrides = self.create_config_overrides(args)
+        config.apply_overrides(overrides)
 
+        # Try to get logger if logging is configured
         try:
-            # Parse command line arguments
-            parser = self.create_argument_parser(description)
-            args = parser.parse_args()
+            from .logging import get_logger
 
-            # Create configuration overrides from CLI arguments
-            cli_overrides = self.create_config_overrides(args)
+            logger = get_logger(f"{self.app_name}.cli")
+            logger.info(f"Starting {self.app_name} CLI")
+            logger.debug(f"Command line arguments: {vars(args)}")
+        except ImportError:
+            pass
 
-            # Create new config manager with overrides
-            config_file = args.config if hasattr(args, "config") and args.config else None
-            if config_file:
-                updated_config = ConfigManager(config_file=config_file, **cli_overrides)
-                # Copy categories from original config manager
-                for name, category in self.config_manager._categories.items():
-                    updated_config.add_category(name, category)
-                # Apply overrides again after copying categories
-                updated_config.apply_overrides(cli_overrides)
-            else:
-                self.config_manager.apply_overrides(cli_overrides)
-                updated_config = self.config_manager
-
-            # Try to get logger if logging is configured
-            try:
-                from .logging import get_logger
-
-                logger = get_logger(f"{self.app_name}.cli")
-                logger.info(f"Starting {self.app_name} CLI")
-                logger.debug(f"Command line arguments: {vars(args)}")
-            except ImportError:
-                pass
-
-            # Validate configuration if validator provided
-            if validator and not validator(updated_config):
-                if logger:
-                    logger.error("Configuration validation failed")
-                else:
-                    print("Configuration validation failed")
-                return 1
-
-            # Run main function
-            return main_function(updated_config)
-
-        except FileNotFoundError as e:
-            if logger:
-                logger.error(f"File not found: {e}")
-                logger.debug("Full traceback:", exc_info=True)
-            else:
-                print(f"Error: {e}")
-                traceback.print_exc()
+        # Optional validation
+        if validator and not validator(config):
+            print("Configuration validation failed.")
             return 1
 
+        # Execute main
+        try:
+            return main_function(config)
         except KeyboardInterrupt:
-            if logger:
-                logger.warning("Process interrupted by user")
-            else:
-                print("Process interrupted by user")
+            print("Interrupted.")
             return 130
-
         except Exception as e:
-            if logger:
-                logger.error(f"Unexpected error: {e}")
-                logger.debug("Full traceback:", exc_info=True)
-            else:
-                print(f"Unexpected error: {e}")
-                traceback.print_exc()
+            print(f"Unexpected error: {e}")
+            traceback.print_exc()
             return 1

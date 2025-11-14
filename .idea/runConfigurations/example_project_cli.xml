@@ -13,7 +13,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="example_project.cli" />
-    <option name="PARAMETERS" value="tests/example_project/example.gpx" />
+    <option name="PARAMETERS" value="--elevation --min_dist 77 --output outputfile.gpx tests/example_project/example.gpx" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="true" />

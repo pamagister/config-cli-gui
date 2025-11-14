@@ -36,6 +36,7 @@ def run_main_processing(_config: ProjectConfigManager) -> int:
             _config.cli.min_dist.value,
             _config.app.date_format.value,
             _config.cli.elevation.value,
+            _config.cli.extract_waypoints.value,
             logger=logger,
         )
 
@@ -57,10 +58,11 @@ def main():
     # Create the base configuration manager
     config_manager = ProjectConfigManager()
 
-    # Create CLI generator
-    cli_generator = CliGenerator(config_manager=config_manager, app_name="config_cli_gui")
+    cli_generator = CliGenerator(
+        config_manager=config_manager,
+        app_name="config_cli_gui",
+    )
 
-    # Run the CLI with our main processing function
     return cli_generator.run_cli(
         main_function=run_main_processing,
         description="Example CLI for config-cli-gui using the generic config framework.",

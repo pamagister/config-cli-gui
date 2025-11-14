@@ -11,6 +11,7 @@ class BaseGPXProcessor:
         min_dist=10,
         date_format="%Y-%m-%d",
         elevation=True,
+        extract_waypoints=True,
         logger=None,
     ):
         # ensure that input is converted into a list[Path]
@@ -29,7 +30,12 @@ class BaseGPXProcessor:
         self.include_elevation = elevation
         self.logger = logger
 
-        self.logger.info(f"example module successfully initialized with input: {self.input}")
+        self.logger.info("example module successfully initialized with:")
+        self.logger.info(f"output: {output}")
+        self.logger.info(f"min_dist: {min_dist}")
+        self.logger.info(f"date_format: {date_format}")
+        self.logger.info(f"elevation: {elevation}")
+        self.logger.info(f"extract_waypoints: {extract_waypoints}")
 
     def compress_files(self) -> list[str]:
         """Shrink the size of all given gpx/kml files in se
