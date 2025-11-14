@@ -4,6 +4,15 @@ Changelog
 
 (unreleased)
 ------------
+- #9 Fix cli bugs: allow toggle or bool. [Paul Magister]
+- #9 Fix cli bugs. [Paul Magister]
+- #9 Fix problems and add ide configs. [Paul Magister]
+- #9 fix cli_example.py. [Paul Magister]
+
+
+0.2.0 (2025-11-13)
+------------------
+- Docs: Update HISTORY.md for release 0.2.0. [Paul Magister]
 - #9 fix posix path issue. [Paul Magister]
 - #9 fix posix path issue. [Paul Magister]
 
