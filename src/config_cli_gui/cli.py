@@ -9,6 +9,28 @@ from typing import Any
 from config_cli_gui.config import ConfigManager
 
 
+def str2bool(v: str):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ("yes", "true", "t", "1"):
+        return True
+    if v.lower() in ("no", "false", "f", "0"):
+        return False
+    raise argparse.ArgumentTypeError("Boolean value expected.")
+
+
+class ToggleOrBool(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values is None:
+            # toggle mode
+            current = getattr(namespace, self.dest, None)
+            default = self.default
+            setattr(namespace, self.dest, not default if current is None else not current)
+        else:
+            # explicit boolean mode
+            setattr(namespace, self.dest, str2bool(values))
+
+
 class CliGenerator:
     """Generates a CLI automatically from a ConfigManager."""
 
@@ -44,8 +66,12 @@ class CliGenerator:
                 "default": argparse.SUPPRESS,
             }
 
+            # Handle different parameter types
             if isinstance(p.value, bool):
-                kwargs["action"] = "store_true" if not p.value else "store_false"
+                kwargs["nargs"] = "?"  # allow optional argument
+                kwargs["default"] = p.value  # default remains as defined
+                kwargs["const"] = None  # triggers toggle mode
+                kwargs["action"] = ToggleOrBool
             else:
                 kwargs["type"] = type(p.value)
                 if p.choices:
