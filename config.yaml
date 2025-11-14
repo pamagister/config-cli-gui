@@ -16,8 +16,8 @@ app:
   # Maximum number of worker threads | type=int, default=4
   max_workers: 4
 cli:
-  # Include elevation data in waypoints | type=bool, default=True [CLI]
-  elevation: true
+  # Include elevation data in waypoints | type=bool, default=False [CLI]
+  elevation: false
   # Extract starting points of each track as waypoint | type=bool, default=True [CLI]
   extract_waypoints: true
   # Path to input (file or folder) | type=str, default= [CLI]

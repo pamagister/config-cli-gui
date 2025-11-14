@@ -14,7 +14,7 @@ python -m app [OPTIONS] input
 | `--output`            | str  | Path to output destination                        | *required* | -             |
 | `--min_dist`          | int  | Maximum distance between two waypoints            | 20         | -             |
 | `--extract_waypoints` | bool | Extract starting points of each track as waypoint | True       | [True, False] |
-| `--elevation`         | bool | Include elevation data in waypoints               | True       | [True, False] |
+| `--elevation`         | bool | Include elevation data in waypoints               | False      | [True, False] |
 
 
 ## Examples
