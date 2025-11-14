@@ -120,16 +120,6 @@ class CliGenerator:
         overrides = self.create_config_overrides(args)
         config.apply_overrides(overrides)
 
-        # Try to get logger if logging is configured
-        try:
-            from .logging import get_logger
-
-            logger = get_logger(f"{self.app_name}.cli")
-            logger.info(f"Starting {self.app_name} CLI")
-            logger.debug(f"Command line arguments: {vars(args)}")
-        except ImportError:
-            pass
-
         # Optional validation
         if validator and not validator(config):
             print("Configuration validation failed.")
