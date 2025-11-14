@@ -181,7 +181,7 @@ class MiscConfig(ConfigCategory):
 
     some_date: ConfigParameter = ConfigParameter(
         name="some_date",
-        value=datetime.now(),
+        value=datetime.fromisoformat("2025-12-31 10:30:45"),
         help="Date setting for the application",
     )
 
@@ -202,9 +202,9 @@ class ProjectConfigManager(ConfigManager):  # Inherit from ConfigManager
 
 def main():
     """Main function to generate config file and documentation."""
-    default_config: str = "../../../config.yaml"
-    default_cli_doc: str = "../../../docs/usage/cli.md"
-    default_config_doc: str = "../../../docs/usage/config.md"
+    default_config: str = "config.yaml"
+    default_cli_doc: str = "docs/usage/cli.md"
+    default_config_doc: str = "docs/usage/config.md"
     _config = ProjectConfigManager()
     doc_gen = DocumentationGenerator(_config)
     doc_gen.generate_default_config_file(output_file=default_config)

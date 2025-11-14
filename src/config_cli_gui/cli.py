@@ -54,8 +54,8 @@ class CliGenerator:
             else:
                 # Optional argument
                 kwargs = {
-                    "value": argparse.SUPPRESS,
-                    "help": f"{param.help} (value: {param.value})",
+                    "default": argparse.SUPPRESS,
+                    "help": f"{param.help} (default: {param.value})",
                 }
 
                 # Handle different parameter types
@@ -68,7 +68,7 @@ class CliGenerator:
                     kwargs["type"] = float
                 elif param_type == bool:
                     kwargs["action"] = "store_true" if not param.value else "store_false"
-                    kwargs["help"] = f"{param.help} (value: {param.value})"
+                    kwargs["help"] = f"{param.help} (default: {param.value})"
                 elif param_type == str:
                     kwargs["type"] = str
 
@@ -123,14 +123,16 @@ class CliGenerator:
 
             # Create new config manager with overrides
             config_file = args.config if hasattr(args, "config") and args.config else None
-            updated_config = ConfigManager(config_file=config_file, **cli_overrides)
-
-            # Copy categories from original config manager
-            for name, category in self.config_manager._categories.items():
-                updated_config.add_category(name, category)
-
-            # Apply overrides again after copying categories
-            updated_config.apply_overrides(cli_overrides)
+            if config_file:
+                updated_config = ConfigManager(config_file=config_file, **cli_overrides)
+                # Copy categories from original config manager
+                for name, category in self.config_manager._categories.items():
+                    updated_config.add_category(name, category)
+                # Apply overrides again after copying categories
+                updated_config.apply_overrides(cli_overrides)
+            else:
+                self.config_manager.apply_overrides(cli_overrides)
+                updated_config = self.config_manager
 
             # Try to get logger if logging is configured
             try:

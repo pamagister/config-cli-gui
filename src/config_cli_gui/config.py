@@ -96,7 +96,7 @@ class ConfigManager:
 
     def __init__(
         self,
-        categories: tuple[ConfigCategory, ...],
+        categories: tuple[ConfigCategory, ...] = None,
         config_file: str | None = None,
         **overrides: Any,
     ):

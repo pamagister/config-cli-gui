@@ -42,7 +42,7 @@ gui:
 misc:
   # Color setting for the application | type=Color, default=#ff0000
   some_color: '#ff0000'
-  # Date setting for the application | type=datetime, default=2025-11-13 22:49:38.801511
-  some_date: '2025-11-13T22:49:38.801511'
+  # Date setting for the application | type=datetime, default=2025-12-31 10:30:45
+  some_date: '2025-12-31T10:30:45'
   # Path to the file to use | type=PosixPath, default=some_file.txt
   some_file: some_file.txt
