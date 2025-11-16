@@ -4,6 +4,15 @@ Changelog
 
 (unreleased)
 ------------
+- Color: return rgb tuple. [Paul Magister]
+- Color: return rgb tuple. [Paul Magister]
+- #9 cli: no .logger import. [Paul Magister]
+- #9 cli: new defaults. [Paul Magister]
+
+
+0.2.2 (2025-11-14)
+------------------
+- Docs: Update HISTORY.md for release 0.2.2. [Paul Magister]
 - #9 cli: unittests. [Paul Magister]
 
 
