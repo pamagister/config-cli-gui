@@ -20,6 +20,9 @@ class Color:
     def to_list(self) -> list[int]:
         return [self.r, self.g, self.b]
 
+    def to_rgb(self) -> tuple[float]:
+        return (self.r / 255, self.g / 255, self.b / 255)
+
     def to_hex(self) -> str:
         return f"#{self.r:02x}{self.g:02x}{self.b:02x}"
 
