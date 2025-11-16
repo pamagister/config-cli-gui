@@ -30,10 +30,11 @@ class ExampleCategory(ConfigCategory):
 
 
 def test_color_basic():
-    c = Color(10, 20, 30)
-    assert c.to_list() == [10, 20, 30]
-    assert c.to_hex() == "#0a141e"
-    assert str(c) == "#0a141e"
+    c = Color(0, 51, 255)
+    assert c.to_list() == [0, 51, 255]
+    assert c.to_hex() == "#0033ff"
+    assert c.to_rgb() == (0.0, 0.2, 1.0)
+    assert str(c) == "#0033ff"
 
 
 def test_color_clamping():
