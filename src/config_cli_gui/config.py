@@ -23,6 +23,10 @@ class Color:
     def to_rgb(self) -> tuple[float]:
         return (self.r / 255, self.g / 255, self.b / 255)
 
+    def to_pil(self) -> tuple[int, ...]:
+        """Convert Color object to Pillow-compatible RGB tuple."""
+        return tuple(int(c) for c in self.to_list())
+
     def to_hex(self) -> str:
         return f"#{self.r:02x}{self.g:02x}{self.b:02x}"
 

@@ -34,6 +34,7 @@ def test_color_basic():
     assert c.to_list() == [0, 51, 255]
     assert c.to_hex() == "#0033ff"
     assert c.to_rgb() == (0.0, 0.2, 1.0)
+    assert c.to_pil() == (0, 51, 255)
     assert str(c) == "#0033ff"
 
 
