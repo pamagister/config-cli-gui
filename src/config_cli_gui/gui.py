@@ -368,14 +368,19 @@ class GenericSettingsDialog:
         entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         def browse_file():
-            if param.value.is_dir() if isinstance(param.value, Path) else False:
-                path = filedialog.askdirectory(initialdir=str(param.value.parent))
-            else:
-                path = filedialog.askopenfilename(initialdir=str(param.value.parent))
+            path = filedialog.askopenfilename(initialdir=str(param.value.parent))
             if path:
                 var.set(path)
 
-        browse_btn = ttk.Button(frame, text="Browse", command=browse_file)
+        def browse_dir():
+            path = filedialog.askdirectory(initialdir=str(param.value.parent))
+            if path:
+                var.set(path)
+
+        browse_btn = ttk.Button(frame, text="File", command=browse_file)
+        browse_btn.pack(side=tk.RIGHT, padx=(5, 0))
+
+        browse_btn = ttk.Button(frame, text="Directory", command=browse_dir)
         browse_btn.pack(side=tk.RIGHT, padx=(5, 0))
 
         frame.var = var
