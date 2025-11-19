@@ -4,6 +4,12 @@ Changelog
 
 (unreleased)
 ------------
+- Path widget: file or dir buttons. [Paul Magister]
+
+
+0.2.4 (2025-11-17)
+------------------
+- Docs: Update HISTORY.md for release 0.2.4. [Paul Magister]
 - Color: return rgb tuple. [Paul Magister]
 
 
