@@ -4,6 +4,12 @@ Changelog
 
 (unreleased)
 ------------
+- Vector: Add property for 2d and 3d vectors. [Paul Magister]
+
+
+0.2.5 (2025-11-19)
+------------------
+- Docs: Update HISTORY.md for release 0.2.5. [Paul Magister]
 - Path widget: file or dir buttons. [Paul Magister]
 
 
