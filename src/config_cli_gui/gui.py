@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import colorchooser, filedialog, messagebox, ttk
 
-from config_cli_gui.config import Color, ConfigCategory, ConfigManager, ConfigParameter
+from config_cli_gui.config import Color, ConfigCategory, ConfigManager, ConfigParameter, Vector
 
 
 class ToolTip:
@@ -315,6 +315,10 @@ class GenericSettingsDialog:
         elif isinstance(param.value, Color):
             return self._create_color_widget(parent, param)
 
+        # Vector type - Vector editor
+        elif isinstance(param.value, Vector):
+            return self._create_vector_widget(parent, param)
+
         # DateTime type - DateTime picker
         elif isinstance(param.value, datetime):
             return self._create_datetime_widget(parent, param)
@@ -421,6 +425,19 @@ class GenericSettingsDialog:
         frame.entry_widget = entry
         return frame
 
+    def _create_vector_widget(self, parent, param: ConfigParameter):
+        """Create vector editor widget."""
+        frame = ttk.Frame(parent)
+
+        vector_value = param.value if isinstance(param.value, Vector) else Vector()
+        var = tk.StringVar(value=vector_value.to_str().strip("()[]"))
+        entry = ttk.Entry(frame, textvariable=var)
+        entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        frame.var = var
+        frame.entry_widget = entry
+        return frame
+
     def _create_datetime_widget(self, parent, param: ConfigParameter):
         """Create datetime picker widget."""
         frame = ttk.Frame(parent)
@@ -517,6 +534,8 @@ class GenericSettingsDialog:
                     import json
 
                     overrides[key] = json.loads(value)
+                elif type(param_value) == Vector:
+                    overrides[key] = Vector.from_str(value)
                 elif type(param_value) == int:
                     overrides[key] = int(value)
                 elif type(param_value) == float:

@@ -1,48 +1,52 @@
 app:
-  # Date format to use | type=str, default=%Y-%m-%d
+  # Date format to use | type=str
   date_format: '%Y-%m-%d'
-  # Enable logging to console | type=bool, default=True
+  # Enable logging to console | type=bool | choices=[True, False]
   enable_console_logging: true
-  # Enable logging to file | type=bool, default=True
+  # Enable logging to file | type=bool | choices=[True, False]
   enable_file_logging: true
-  # Number of backup log files to keep | type=int, default=5
+  # Number of backup log files to keep | type=int
   log_backup_count: 5
-  # Maximum log file size in MB before rotation | type=int, default=10
+  # Maximum log file size in MB before rotation | type=int
   log_file_max_size: 10
-  # Log message format style | type=str, default=detailed
+  # Log message format style | type=str | choices=['simple', 'detailed', 'json']
   log_format: detailed
-  # Logging level for the application | type=str, default=INFO
+  # Logging level for the application | type=str | choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
   log_level: INFO
-  # Maximum number of worker threads | type=int, default=4
+  # Maximum number of worker threads | type=int
   max_workers: 4
 cli:
-  # Include elevation data in waypoints | type=bool, default=False [CLI]
+  # Include elevation data in waypoints | type=bool [CLI] | choices=[True, False]
   elevation: false
-  # Extract starting points of each track as waypoint | type=bool, default=True [CLI]
+  # Extract starting points of each track as waypoint | type=bool [CLI] | choices=[True, False]
   extract_waypoints: true
-  # Path to input (file or folder) | type=str, default= [CLI]
+  # Path to input (file or folder) | type=str [CLI]
   input: ''
-  # Maximum distance between two waypoints | type=int, default=20 [CLI]
+  # Maximum distance between two waypoints | type=int [CLI]
   min_dist: 20
-  # Path to output destination | type=str, default= [CLI]
+  # Path to output destination | type=str [CLI]
   output: ''
 gui:
-  # Automatically scroll to the newest log entries | type=bool, default=True
+  # Automatically scroll to the newest log entries | type=bool | choices=[True, False]
   auto_scroll_log: true
-  # Height of the log window in pixels | type=int, default=200
+  # Height of the log window in pixels | type=int
   log_window_height: 200
-  # Maximum number of log lines to keep in GUI | type=int, default=1000
+  # Maximum number of log lines to keep in GUI | type=int
   max_log_lines: 1000
-  # GUI theme setting | type=str, default=light
+  # Point in 2D space | type=Vector
+  point2D: (7, 11)
+  # Point in 3D space | type=Vector
+  point3D: (1.2, 3.4, 5.6)
+  # GUI theme setting | type=str | choices=['light', 'dark', 'auto']
   theme: light
-  # Default window height | type=int, default=600
+  # Default window height | type=int
   window_height: 600
-  # Default window width | type=int, default=800
+  # Default window width | type=int
   window_width: 800
 misc:
-  # Color setting for the application | type=Color, default=#ff0000
+  # Color setting for the application | type=Color
   some_color: '#ff0000'
-  # Date setting for the application | type=datetime, default=2025-12-31 10:30:45
+  # Date setting for the application | type=datetime
   some_date: '2025-12-31T10:30:45'
-  # Path to the file to use | type=PosixPath, default=some_file.txt
+  # Path to the file to use | type=PosixPath
   some_file: some_file.txt

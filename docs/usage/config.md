@@ -28,14 +28,16 @@ The parameters in the cli category can be accessed via the command line interfac
 
 ## Category "gui"
 
-| Name              | Type | Description                                    | Default | Choices                   |
-|-------------------|------|------------------------------------------------|---------|---------------------------|
-| theme             | str  | GUI theme setting                              | 'light' | ['light', 'dark', 'auto'] |
-| window_width      | int  | Default window width                           | 800     | -                         |
-| window_height     | int  | Default window height                          | 600     | -                         |
-| log_window_height | int  | Height of the log window in pixels             | 200     | -                         |
-| auto_scroll_log   | bool | Automatically scroll to the newest log entries | True    | [True, False]             |
-| max_log_lines     | int  | Maximum number of log lines to keep in GUI     | 1000    | -                         |
+| Name              | Type   | Description                                    | Default               | Choices                   |
+|-------------------|--------|------------------------------------------------|-----------------------|---------------------------|
+| theme             | str    | GUI theme setting                              | 'light'               | ['light', 'dark', 'auto'] |
+| window_width      | int    | Default window width                           | 800                   | -                         |
+| window_height     | int    | Default window height                          | 600                   | -                         |
+| log_window_height | int    | Height of the log window in pixels             | 200                   | -                         |
+| auto_scroll_log   | bool   | Automatically scroll to the newest log entries | True                  | [True, False]             |
+| max_log_lines     | int    | Maximum number of log lines to keep in GUI     | 1000                  | -                         |
+| point2D           | Vector | Point in 2D space                              | Vector(7, 11)         | -                         |
+| point3D           | Vector | Point in 3D space                              | Vector(1.2, 3.4, 5.6) | -                         |
 
 ## Category "misc"
 

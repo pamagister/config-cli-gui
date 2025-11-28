@@ -9,6 +9,39 @@ import yaml
 from pydantic import BaseModel
 
 
+class Vector:
+    """Class that represents a vector or point in 2D or 3D"""
+
+    def __init__(self, x: int | float, y: int | float, z: int | float | None = None):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def to_list(self) -> list[int]:
+        return [self.x, self.y, self.z] if self.z is not None else [self.x, self.y]
+
+    @classmethod
+    def from_list(cls, coordinate: list[int | str | float]) -> "Vector":
+        if len(coordinate) == 2:
+            return cls(float(coordinate[0]), float(coordinate[1]))
+        if len(coordinate) >= 3:
+            return cls(float(coordinate[0]), float(coordinate[1]), float(coordinate[2]))
+        return cls()
+
+    @classmethod
+    def from_str(cls, coordinate: str) -> "Vector":
+        return cls.from_list(coordinate.strip("()[]").split(","))
+
+    def to_str(self) -> str:
+        return f"({self.x}, {self.y}, {self.z})" if self.z is not None else f"({self.x}, {self.y})"  # type: ignore
+
+    def __str__(self):
+        return self.to_str()
+
+    def __repr__(self):
+        return f"Vector{str(self)}"
+
+
 class Color:
     """Simple color class for RGB values."""
 
@@ -168,6 +201,10 @@ class ConfigManager:
                     param_value = Color.from_list(param_value)
                 if isinstance(param.value, Color) and isinstance(param_value, str):
                     param_value = Color.from_hex(param_value)
+                if isinstance(param.value, Vector) and isinstance(param_value, list):
+                    param_value = Vector.from_list(param_value)
+                if isinstance(param.value, Vector) and isinstance(param_value, str):
+                    param_value = Vector.from_str(param_value)
                 elif isinstance(param.value, Path):
                     param_value = Path(param_value)
                 elif isinstance(param.value, datetime):
@@ -202,6 +239,8 @@ class ConfigManager:
                 val = getattr(category, param.name).value
                 if isinstance(val, Color):
                     val = val.to_hex()
+                elif isinstance(val, Vector):
+                    val = str(val.to_str())
                 elif isinstance(val, Path):
                     val = str(val.as_posix())
                 elif isinstance(val, datetime):
@@ -242,9 +281,11 @@ class ConfigManager:
                         indent = " " * (len(line) - len(stripped))
                         comment = (
                             f"{indent}# {param.help} | "
-                            f"type={param.type_.__name__}, default={param.value}"
+                            f"type={param.type_.__name__}"
                             f"{' [CLI]' if param.is_cli else ''}"
                         )
+                        if param.choices:
+                            comment = comment + f" | choices={param.choices}"
                         new_lines.append(comment)
 
             new_lines.append(line)

@@ -13,6 +13,7 @@ from config_cli_gui.config import (
     ConfigCategory,
     ConfigManager,
     ConfigParameter,
+    Vector,
 )
 from config_cli_gui.docs import DocumentationGenerator
 
@@ -160,6 +161,18 @@ class GuiConfig(ConfigCategory):
         name="max_log_lines",
         value=1000,
         help="Maximum number of log lines to keep in GUI",
+    )
+
+    point2D: ConfigParameter = ConfigParameter(
+        name="point2D",
+        value=Vector(7, 11),
+        help="Point in 2D space",
+    )
+
+    point3D: ConfigParameter = ConfigParameter(
+        name="point3D",
+        value=Vector(1.2, 3.4, 5.6),
+        help="Point in 3D space",
     )
 
 

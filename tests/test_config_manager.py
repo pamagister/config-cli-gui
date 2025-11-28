@@ -10,6 +10,7 @@ from config_cli_gui.config import (
     ConfigCategory,
     ConfigManager,
     ConfigParameter,
+    Vector,
 )
 
 
@@ -36,6 +37,18 @@ def test_color_basic():
     assert c.to_rgb() == (0.0, 0.2, 1.0)
     assert c.to_pil() == (0, 51, 255)
     assert str(c) == "#0033ff"
+
+
+def test_vector_2d():
+    v = Vector(1, 2)
+    assert v.to_list() == [1, 2]
+    assert str(v) == "(1, 2)"
+
+
+def test_vector_3d():
+    v = Vector.from_str("1.2, 2.3, 3.4")
+    assert v.to_list() == [1.2, 2.3, 3.4]
+    assert str(v) == "(1.2, 2.3, 3.4)"
 
 
 def test_color_clamping():
