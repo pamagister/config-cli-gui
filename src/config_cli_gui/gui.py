@@ -271,9 +271,12 @@ class GenericSettingsDialog:
 
         for param in parameters:
             param.value = getattr(category, param.name).value
+
+            """
             if param.required:
                 # Skip required parameters as they are not configurable in GUI
                 continue
+            """
 
             # Create label
             label = ttk.Label(parent, text=f"{param.name}:")
