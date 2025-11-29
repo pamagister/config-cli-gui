@@ -4,6 +4,12 @@ Changelog
 
 (unreleased)
 ------------
+- Also show required params in gui. [Paul Magister]
+
+
+0.2.6 (2025-11-28)
+------------------
+- Docs: Update HISTORY.md for release 0.2.6. [Paul Magister]
 - Vector: Add property for 2d and 3d vectors. [Paul Magister]
 
 
