@@ -2,10 +2,13 @@
 """Generic GUI settings dialog generator for configuration framework."""
 
 import calendar
+import os
 import tkinter as tk
 from datetime import datetime
 from pathlib import Path
 from tkinter import colorchooser, filedialog, messagebox, ttk
+
+from PIL import Image, ImageDraw, ImageTk
 
 from config_cli_gui.config import (
     Color,
@@ -444,14 +447,22 @@ class GenericSettingsDialog:
         frame = ttk.Frame(parent)
         font_value = param.value if isinstance(param.value, Font) else Font("Arial", 12, Color())
 
+        font_files = Font.system_fonts
+        font_names = sorted([os.path.basename(f) for f in font_files])
+        font_files_sorted = sorted(font_files, key=os.path.basename)
+
         # Font type
-        font_type_var = tk.StringVar(value=font_value.font_type)
-        font_type_entry = ttk.Entry(frame, textvariable=font_type_var, width=15)
-        font_type_entry.pack(side=tk.LEFT, padx=(0, 5))
+        font_type_var = tk.StringVar(value=os.path.basename(font_value.font_type))
+        font_type_combo = ttk.Combobox(
+            frame, textvariable=font_type_var, values=font_names, state="readonly", width=25
+        )
+        font_type_combo.pack(side=tk.LEFT, padx=(0, 5))
 
         # Font size
         font_size_var = tk.DoubleVar(value=font_value.size)
-        font_size_spinbox = ttk.Spinbox(frame, from_=1, to=100, textvariable=font_size_var, width=5)
+        font_size_spinbox = ttk.Spinbox(
+            frame, from_=1, to=100, textvariable=font_size_var, width=5
+        )
         font_size_spinbox.pack(side=tk.LEFT, padx=(0, 5))
 
         # Font color
@@ -476,11 +487,50 @@ class GenericSettingsDialog:
 
         color_var.trace("w", on_color_change)
 
+        def show_preview():
+            font_size = int(font_size_var.get())
+            img_width = 170 + 3*font_size
+            img_height = 20 + font_size
+
+            preview_win = tk.Toplevel(self.dialog)
+            preview_win.title("Font Preview")
+            preview_win.geometry(f"{img_width}x{img_height}")
+            preview_win.transient(self.dialog)
+            preview_win.grab_set()
+
+            selected_font_name = font_type_var.get()
+            font_path = ""
+            if selected_font_name in font_names:
+                font_path = font_files_sorted[font_names.index(selected_font_name)]
+
+            font_color_hex = color_var.get()
+
+            font_obj = Font(font_path, font_size, Color.from_hex(font_color_hex))
+            font = font_obj.get_image_font()
+
+            img = Image.new("RGB", (img_width, img_height), "white")
+            draw = ImageDraw.Draw(img)
+
+            text = "Sample"
+
+            draw.text((img_width/2, img_height/2), text, fill=font_color_hex, font=font, anchor="mm")
+
+            photo = ImageTk.PhotoImage(img)
+
+            img_label = tk.Label(preview_win, image=photo)
+            img_label.image = photo
+            img_label.pack()
+
+        preview_btn = ttk.Button(frame, text="Preview", command=show_preview)
+        preview_btn.pack(side=tk.LEFT, padx=(5, 0))
+
         # Store variables in the frame for later access
         frame.font_type_var = font_type_var
         frame.font_size_var = font_size_var
         frame.color_var = color_var
-        frame.entry_widget = font_type_entry  # For tooltip
+        frame.font_files = font_files_sorted
+        frame.font_names = font_names
+        frame.entry_widget = font_type_combo
         return frame
 
     def _create_vector_widget(self, parent, param: ConfigParameter):
@@ -572,7 +622,13 @@ class GenericSettingsDialog:
                 param_value = getattr(category, param_name).value
 
                 if isinstance(param_value, Font):
-                    font_type = widget.font_type_var.get()
+                    selected_font_name = widget.font_type_var.get()
+                    font_type = selected_font_name
+                    if selected_font_name in widget.font_names:
+                        font_type = widget.font_files[
+                            widget.font_names.index(selected_font_name)
+                        ]
+
                     font_size = widget.font_size_var.get()
                     font_color = Color.from_hex(widget.color_var.get())
                     overrides[key] = Font(font_type, font_size, font_color)
