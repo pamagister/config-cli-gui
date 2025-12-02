@@ -6,13 +6,13 @@ from unittest.mock import patch
 import pytest
 
 from config_cli_gui.config import (
-    Color,
     ConfigCategory,
     ConfigManager,
     ConfigParameter,
-    Font,
-    Vector,
 )
+from config_cli_gui.configtypes.color import Color
+from config_cli_gui.configtypes.font import Font
+from config_cli_gui.configtypes.vector import Vector
 
 
 class ExampleCategory(ConfigCategory):

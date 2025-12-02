@@ -62,11 +62,11 @@ from datetime import datetime
 from pathlib import Path
 
 from config_cli_gui.config import (
-    Color,
     ConfigCategory,
     ConfigManager,
     ConfigParameter,
 )
+from config_cli_gui.configtypes.color import Color
 from config_cli_gui.docs import DocumentationGenerator
 
 

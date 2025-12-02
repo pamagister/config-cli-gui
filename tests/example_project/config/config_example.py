@@ -9,13 +9,13 @@ from datetime import datetime
 from pathlib import Path
 
 from config_cli_gui.config import (
-    Color,
     ConfigCategory,
     ConfigManager,
     ConfigParameter,
-    Font,
-    Vector,
 )
+from config_cli_gui.configtypes.color import Color
+from config_cli_gui.configtypes.font import Font
+from config_cli_gui.configtypes.vector import Vector
 from config_cli_gui.docs import DocumentationGenerator
 
 

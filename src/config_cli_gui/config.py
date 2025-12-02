@@ -1,5 +1,4 @@
 import json
-import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
@@ -7,148 +6,11 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from PIL import ImageFont
 from pydantic import BaseModel
 
-
-class Font:
-    """Class that represents a font with type, size and color."""
-
-    def __init__(self, font_type: str, size: float, color: "Color"):
-        self.font_type = font_type
-        self.size = size
-        self.color = color
-
-    def to_list(self) -> list[Any]:
-        """Return a list representation of the font."""
-        return [self.font_type, self.size, self.color.to_hex()]
-
-    @classmethod
-    def from_list(cls, font_data: list[Any]) -> "Font":
-        """Create a Font object from a list."""
-        if len(font_data) >= 3:
-            font_type, size, color_val = font_data
-            color = (
-                Color.from_hex(color_val)
-                if isinstance(color_val, str)
-                else Color.from_list(color_val)
-            )
-            return cls(str(font_type), float(size), color)
-        # Return a default font if data is incomplete
-        return cls("Arial", 12, Color(0, 0, 0))
-
-    def get_image_font(self) -> ImageFont.FreeTypeFont:
-        try:
-            return ImageFont.truetype(self.font_type, self.size)
-        except Exception:
-            print(f"Error loading font {self.font_type}. Available fonts: \n")
-            print("\n".join(self.list_system_fonts()))
-            font: ImageFont.FreeTypeFont = ImageFont.load_default(self.size)
-            return font
-
-    @staticmethod
-    def list_system_fonts() -> list[str]:
-        font_dirs = [
-            "/usr/share/fonts",  # Linux allgemein
-            "/usr/local/share/fonts",  # Linux lokal
-            str(Path.home() / ".fonts"),  # Linux User-Fonts
-            "/Library/Fonts",  # macOS
-            "/System/Library/Fonts",  # macOS
-            "C:/Windows/Fonts",  # Windows
-        ]
-
-        fonts = []
-        for d in font_dirs:
-            if os.path.isdir(d):
-                for root, _, files in os.walk(d):
-                    for f in files:
-                        if f.lower().endswith((".ttf", ".otf")):
-                            fonts.append(os.path.join(root, f))
-        return fonts
-
-    def __repr__(self) -> str:
-        return f"Font(type='{self.font_type}', size={self.size}, color={self.color!r})"
-
-    def __str__(self) -> str:
-        return f"{self.font_type}, {self.size}pt, {self.color}"
-
-
-class Vector:
-    """Class that represents a vector or point in 2D or 3D"""
-
-    def __init__(self, x: int | float, y: int | float, z: int | float | None = None):
-        self.x = x
-        self.y = y
-        self.z = z
-
-    def to_list(self) -> list[int]:
-        return [self.x, self.y, self.z] if self.z is not None else [self.x, self.y]
-
-    @classmethod
-    def from_list(cls, coordinate: list[int | str | float]) -> "Vector":
-        if len(coordinate) == 2:
-            return cls(float(coordinate[0]), float(coordinate[1]))
-        if len(coordinate) >= 3:
-            return cls(float(coordinate[0]), float(coordinate[1]), float(coordinate[2]))
-        return cls()
-
-    @classmethod
-    def from_str(cls, coordinate: str) -> "Vector":
-        return cls.from_list(coordinate.strip("()[]").split(","))
-
-    def to_str(self) -> str:
-        return f"({self.x}, {self.y}, {self.z})" if self.z is not None else f"({self.x}, {self.y})"  # type: ignore
-
-    def __str__(self):
-        return self.to_str()
-
-    def __repr__(self):
-        return f"Vector{str(self)}"
-
-
-class Color:
-    """Simple color class for RGB values."""
-
-    def __init__(self, r: int = 0, g: int = 0, b: int = 0):
-        self.r = max(0, min(255, r))
-        self.g = max(0, min(255, g))
-        self.b = max(0, min(255, b))
-
-    def to_list(self) -> list[int]:
-        return [self.r, self.g, self.b]
-
-    def to_rgb(self) -> tuple[float, float, float]:
-        return self.r / 255, self.g / 255, self.b / 255
-
-    def to_pil(self) -> tuple[int, ...]:
-        """Convert Color object to Pillow-compatible RGB tuple."""
-        return tuple(int(c) for c in self.to_list())
-
-    def to_hex(self) -> str:
-        return f"#{self.r:02x}{self.g:02x}{self.b:02x}"
-
-    @classmethod
-    def from_list(cls, rgb_list: list[int | str]) -> "Color":
-        if len(rgb_list) >= 3:
-            return cls(int(rgb_list[0]), int(rgb_list[1]), int(rgb_list[2]))
-        return cls()
-
-    @classmethod
-    def from_hex(cls, hex_color: str) -> "Color":
-        hex_color = hex_color.lstrip("#")
-        if len(hex_color) == 6:
-            return cls(
-                int(hex_color[0:2], 16),
-                int(hex_color[2:4], 16),
-                int(hex_color[4:6], 16),
-            )
-        return cls()
-
-    def __str__(self):
-        return self.to_hex()
-
-    def __repr__(self):
-        return f"Color({self.r}, {self.g}, {self.b})"
+from config_cli_gui.configtypes.color import Color
+from config_cli_gui.configtypes.font import Font
+from config_cli_gui.configtypes.vector import Vector
 
 
 @dataclass
