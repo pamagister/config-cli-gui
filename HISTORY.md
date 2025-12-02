@@ -4,6 +4,15 @@ Changelog
 
 (unreleased)
 ------------
+- Refactoring: get_image_font will look for the actual font path in the
+  system. [Paul Magister]
+- Font preview. [Paul Magister]
+- Add font category in config.py. [Paul Magister]
+
+
+0.2.7 (2025-11-29)
+------------------
+- Docs: Update HISTORY.md for release 0.2.7. [Paul Magister]
 - Also show required params in gui. [Paul Magister]
 
 
