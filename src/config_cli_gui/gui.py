@@ -7,7 +7,14 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import colorchooser, filedialog, messagebox, ttk
 
-from config_cli_gui.config import Color, ConfigCategory, ConfigManager, ConfigParameter, Vector
+from config_cli_gui.config import (
+    Color,
+    ConfigCategory,
+    ConfigManager,
+    ConfigParameter,
+    Font,
+    Vector,
+)
 
 
 class ToolTip:
@@ -318,6 +325,10 @@ class GenericSettingsDialog:
         elif isinstance(param.value, Color):
             return self._create_color_widget(parent, param)
 
+        # Font type - Font picker
+        elif isinstance(param.value, Font):
+            return self._create_font_widget(parent, param)
+
         # Vector type - Vector editor
         elif isinstance(param.value, Vector):
             return self._create_vector_widget(parent, param)
@@ -428,6 +439,50 @@ class GenericSettingsDialog:
         frame.entry_widget = entry
         return frame
 
+    def _create_font_widget(self, parent, param: ConfigParameter):
+        """Create font picker widget."""
+        frame = ttk.Frame(parent)
+        font_value = param.value if isinstance(param.value, Font) else Font("Arial", 12, Color())
+
+        # Font type
+        font_type_var = tk.StringVar(value=font_value.font_type)
+        font_type_entry = ttk.Entry(frame, textvariable=font_type_var, width=15)
+        font_type_entry.pack(side=tk.LEFT, padx=(0, 5))
+
+        # Font size
+        font_size_var = tk.DoubleVar(value=font_value.size)
+        font_size_spinbox = ttk.Spinbox(frame, from_=1, to=100, textvariable=font_size_var, width=5)
+        font_size_spinbox.pack(side=tk.LEFT, padx=(0, 5))
+
+        # Font color
+        color_var = tk.StringVar(value=font_value.color.to_hex())
+        color_display = tk.Label(frame, width=8, bg=font_value.color.to_hex())
+        color_display.pack(side=tk.LEFT, padx=(8, 2))
+
+        def pick_color():
+            color = colorchooser.askcolor(color=color_var.get())
+            if color[1]:
+                color_var.set(color[1])
+                color_display.config(bg=color[1])
+
+        pick_btn = ttk.Button(frame, text="Pick Color", command=pick_color)
+        pick_btn.pack(side=tk.LEFT, padx=(5, 0))
+
+        def on_color_change(*args):
+            try:
+                color_display.config(bg=color_var.get())
+            except tk.TclError:
+                pass
+
+        color_var.trace("w", on_color_change)
+
+        # Store variables in the frame for later access
+        frame.font_type_var = font_type_var
+        frame.font_size_var = font_size_var
+        frame.color_var = color_var
+        frame.entry_widget = font_type_entry  # For tooltip
+        return frame
+
     def _create_vector_widget(self, parent, param: ConfigParameter):
         """Create vector editor widget."""
         frame = ttk.Frame(parent)
@@ -512,12 +567,18 @@ class GenericSettingsDialog:
             # Update configuration with widget values
             overrides = {}
             for key, widget in self.widgets.items():
-                value = widget.var.get()
-
-                # Parse value based on parameter type
                 category_name, param_name = key.split("__", 1)
                 category = self.config_manager.get_category(category_name)
                 param_value = getattr(category, param_name).value
+
+                if isinstance(param_value, Font):
+                    font_type = widget.font_type_var.get()
+                    font_size = widget.font_size_var.get()
+                    font_color = Color.from_hex(widget.color_var.get())
+                    overrides[key] = Font(font_type, font_size, font_color)
+                    continue
+
+                value = widget.var.get()
 
                 # Convert value to appropriate type
                 if type(param_value) == bool:

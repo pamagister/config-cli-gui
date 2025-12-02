@@ -1,4 +1,5 @@
 import json
+import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
@@ -6,7 +7,70 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from PIL import ImageFont
 from pydantic import BaseModel
+
+
+class Font:
+    """Class that represents a font with type, size and color."""
+
+    def __init__(self, font_type: str, size: float, color: "Color"):
+        self.font_type = font_type
+        self.size = size
+        self.color = color
+
+    def to_list(self) -> list[Any]:
+        """Return a list representation of the font."""
+        return [self.font_type, self.size, self.color.to_hex()]
+
+    @classmethod
+    def from_list(cls, font_data: list[Any]) -> "Font":
+        """Create a Font object from a list."""
+        if len(font_data) >= 3:
+            font_type, size, color_val = font_data
+            color = (
+                Color.from_hex(color_val)
+                if isinstance(color_val, str)
+                else Color.from_list(color_val)
+            )
+            return cls(str(font_type), float(size), color)
+        # Return a default font if data is incomplete
+        return cls("Arial", 12, Color(0, 0, 0))
+
+    def get_image_font(self) -> ImageFont.FreeTypeFont:
+        try:
+            return ImageFont.truetype(self.font_type, self.size)
+        except Exception:
+            print(f"Error loading font {self.font_type}. Available fonts: \n")
+            print("\n".join(self.list_system_fonts()))
+            font: ImageFont.FreeTypeFont = ImageFont.load_default(self.size)
+            return font
+
+    @staticmethod
+    def list_system_fonts() -> list[str]:
+        font_dirs = [
+            "/usr/share/fonts",  # Linux allgemein
+            "/usr/local/share/fonts",  # Linux lokal
+            str(Path.home() / ".fonts"),  # Linux User-Fonts
+            "/Library/Fonts",  # macOS
+            "/System/Library/Fonts",  # macOS
+            "C:/Windows/Fonts",  # Windows
+        ]
+
+        fonts = []
+        for d in font_dirs:
+            if os.path.isdir(d):
+                for root, _, files in os.walk(d):
+                    for f in files:
+                        if f.lower().endswith((".ttf", ".otf")):
+                            fonts.append(os.path.join(root, f))
+        return fonts
+
+    def __repr__(self) -> str:
+        return f"Font(type='{self.font_type}', size={self.size}, color={self.color!r})"
+
+    def __str__(self) -> str:
+        return f"{self.font_type}, {self.size}pt, {self.color}"
 
 
 class Vector:
@@ -53,8 +117,8 @@ class Color:
     def to_list(self) -> list[int]:
         return [self.r, self.g, self.b]
 
-    def to_rgb(self) -> tuple[float]:
-        return (self.r / 255, self.g / 255, self.b / 255)
+    def to_rgb(self) -> tuple[float, float, float]:
+        return self.r / 255, self.g / 255, self.b / 255
 
     def to_pil(self) -> tuple[int, ...]:
         """Convert Color object to Pillow-compatible RGB tuple."""
@@ -197,6 +261,8 @@ class ConfigManager:
                     continue
 
                 # Type conversions
+                if isinstance(param.value, Font) and isinstance(param_value, list):
+                    param_value = Font.from_list(param_value)
                 if isinstance(param.value, Color) and isinstance(param_value, list):
                     param_value = Color.from_list(param_value)
                 if isinstance(param.value, Color) and isinstance(param_value, str):
@@ -237,7 +303,9 @@ class ConfigManager:
             result[category_name] = {}
             for param in category.get_parameters():
                 val = getattr(category, param.name).value
-                if isinstance(val, Color):
+                if isinstance(val, Font):
+                    val = val.to_list()
+                elif isinstance(val, Color):
                     val = val.to_hex()
                 elif isinstance(val, Vector):
                     val = str(val.to_str())

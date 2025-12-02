@@ -13,6 +13,7 @@ from config_cli_gui.config import (
     ConfigCategory,
     ConfigManager,
     ConfigParameter,
+    Font,
     Vector,
 )
 from config_cli_gui.docs import DocumentationGenerator
@@ -196,6 +197,12 @@ class MiscConfig(ConfigCategory):
         name="some_date",
         value=datetime.fromisoformat("2025-12-31 10:30:45"),
         help="Date setting for the application",
+    )
+
+    some_font: ConfigParameter = ConfigParameter(
+        name="some_font",
+        value=Font("DejaVuSans.ttf", size=12, color=Color(0, 0, 255)),
+        help="Font setting for the application",
     )
 
 

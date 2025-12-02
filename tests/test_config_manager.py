@@ -10,6 +10,7 @@ from config_cli_gui.config import (
     ConfigCategory,
     ConfigManager,
     ConfigParameter,
+    Font,
     Vector,
 )
 
@@ -37,6 +38,12 @@ def test_color_basic():
     assert c.to_rgb() == (0.0, 0.2, 1.0)
     assert c.to_pil() == (0, 51, 255)
     assert str(c) == "#0033ff"
+
+
+def test_font_basic():
+    f = Font("DejaVuSans.ttf", size=12, color=Color(255, 0, 0))
+    assert f.to_list() == ["DejaVuSans.ttf", 12, "#ff0000"]
+    assert str(f) == "DejaVuSans.ttf, 12pt, #ff0000"
 
 
 def test_vector_2d():

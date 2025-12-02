@@ -10,6 +10,7 @@ requires-python = ">=3.10,<3.12"
 dependencies = [
     "pydantic>=2.11.7",
     "pyyaml>=6.0.2",
+    "pillow>=12.0.0",
 ]
 
 # Dev dependencies as optional dependencies
