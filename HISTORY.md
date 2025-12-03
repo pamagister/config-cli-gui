@@ -2,8 +2,9 @@ Changelog
 =========
 
 
-(unreleased)
-------------
+0.2.9 (2025-12-03)
+------------------
+- Docs: Update HISTORY.md for release 0.2.9. [Paul Magister]
 - Spinbox for vector. [Paul Magister]
 - Better example, make get_image_font sensitive to dpi, [Paul Magister]
 
