@@ -4,6 +4,12 @@ Changelog
 
 (unreleased)
 ------------
+- Refactoring: config parameters will stay ordered like in the config.
+  [Paul Magister]
+- Refactoring: config parameters will stay ordered like in the config.
+  [Paul Magister]
+- Refactor cli.py, move logging into this project. [Paul Magister]
+- Docs: Update HISTORY.md for release 0.2.9. [Paul Magister]
 - Docs: Update HISTORY.md for release 0.2.10. [Paul Magister]
 - Docs: Update HISTORY.md for release 0.2.9. [Paul Magister]
 - Update README.md from docs/index.md. [github-actions]
