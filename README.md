@@ -30,11 +30,6 @@ You can install `config-cli-gui` using pip:
 pip install config-cli-gui
 ```
 
-## Contribution
-
-Refer to this how-to in the referenced project for getting started to install and develop on this project:
-https://github.com/pamagister/python-template-project
-
 ---
 
 ## ✨ Features
@@ -67,43 +62,26 @@ from config_cli_gui.config import (
     ConfigParameter,
 )
 from config_cli_gui.configtypes.color import Color
-from config_cli_gui.docs import DocumentationGenerator
-
-
-class CliConfig(ConfigCategory):
-    """CLI-specific configuration parameters."""
-
-    def get_category_name(self) -> str:
-        return "cli"
-
-    # Positional argument
-    input: ConfigParameter = ConfigParameter(
-        name="input",
-        value="",
-        help="Path to input (file or folder)",
-        required=True,
-        is_cli=True,
-    )
-
-    # Optional CLI arguments
-    output: ConfigParameter = ConfigParameter(
-        name="output",
-        value="",
-        help="Path to output destination",
-        is_cli=True,
-    )
-
-    min_dist: ConfigParameter = ConfigParameter(
-        name="min_dist",
-        value=20,
-        help="Maximum distance between two waypoints",
-        is_cli=True,
-    )
+from config_cli_gui.configtypes.font import Font
+from config_cli_gui.configtypes.vector import Vector
 
 
 class MiscConfig(ConfigCategory):
     def get_category_name(self) -> str:
         return "misc"
+
+    some_numeric: ConfigParameter = ConfigParameter(
+        name="some_numeric",
+        value=int(42),
+        help="Example integer",
+        is_cli=True,
+    )
+
+    some_vector: ConfigParameter = ConfigParameter(
+        name="some_vector",
+        value=Vector(1, 2, 3),
+        help="Example vector",
+    )
 
     some_file: ConfigParameter = ConfigParameter(
         name="some_file",
@@ -119,20 +97,46 @@ class MiscConfig(ConfigCategory):
 
     some_date: ConfigParameter = ConfigParameter(
         name="some_date",
-        value=datetime.now(),
+        value=datetime.fromisoformat("2025-12-31 10:30:45"),
         help="Date setting for the application",
+    )
+
+    some_font: ConfigParameter = ConfigParameter(
+        name="some_font",
+        value=Font("DejaVuSans.ttf", size=12, color=Color(0, 0, 255)),
+        help="Font setting for the application",
+    )
+
+
+class AppConfig(ConfigCategory):
+    """Application-specific configuration parameters."""
+
+    def get_category_name(self) -> str:
+        return "app"
+
+    log_level: ConfigParameter = ConfigParameter(
+        name="log_level",
+        value="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="Logging level for the application",
+    )
+
+    log_file_max_size: ConfigParameter = ConfigParameter(
+        name="log_file_max_size",
+        value=10,
+        help="Maximum log file size in MB before rotation",
     )
 
 
 class ProjectConfigManager(ConfigManager):  # Inherit from ConfigManager
     """Main configuration manager that handles all parameter categories."""
 
-    cli: CliConfig
+    app: AppConfig
     misc: MiscConfig
-
+    
     def __init__(self, config_file: str | None = None, **kwargs):
         """Initialize the configuration manager with all parameter categories."""
-        categories = (CliConfig(), MiscConfig())
+        categories = (MiscConfig(), AppConfig())
         super().__init__(categories, config_file, **kwargs)
 
 
