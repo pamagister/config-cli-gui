@@ -4,6 +4,13 @@ Changelog
 
 (unreleased)
 ------------
+- Spinbox for vector. [Paul Magister]
+- Better example, make get_image_font sensitive to dpi, [Paul Magister]
+
+
+0.2.8 (2025-12-02)
+------------------
+- Docs: Update HISTORY.md for release 0.2.8. [Paul Magister]
 - Refactoring: get_image_font will look for the actual font path in the
   system. [Paul Magister]
 - Font preview. [Paul Magister]
