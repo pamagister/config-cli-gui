@@ -18,14 +18,14 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 from config_cli_gui.gui import SettingsDialogGenerator
-from tests.example_project.config.config_example import ProjectConfigManager
-from tests.example_project.core.base import BaseGPXProcessor
-from tests.example_project.core.logging import (
+from config_cli_gui.logging import (
     connect_gui_logging,
     disconnect_gui_logging,
     get_logger,
     initialize_logging,
 )
+from tests.example_project.config.config_example import ProjectConfigManager
+from tests.example_project.core.base import BaseGPXProcessor
 
 
 class GuiLogWriter:
@@ -118,7 +118,7 @@ class MainGui:
         self._config = ProjectConfigManager("config.yaml")
 
         # Initialize logging system
-        self.logger_manager = initialize_logging(self._config)
+        self.logger_manager = initialize_logging(self._config.app.log_level.value)
         self.logger = get_logger("gui.main")
 
         # File lists

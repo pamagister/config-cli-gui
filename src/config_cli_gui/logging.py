@@ -12,8 +12,6 @@ import logging.handlers
 import sys
 from pathlib import Path
 
-from tests.example_project.config.config_example import ProjectConfigManager
-
 
 class GuiLogHandler(logging.Handler):
     """Custom logging handler that can write to GUI text widgets."""
@@ -39,8 +37,13 @@ class GuiLogHandler(logging.Handler):
 class LoggerManager:
     """Manages all logging configuration and handlers."""
 
-    def __init__(self, config: ProjectConfigManager):
-        self.config = config
+    def __init__(self, log_level: str):
+        """
+        Initialize the logger manager.
+
+        :param log_level: log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        """
+        self.log_level = log_level.upper()
         self.logger = logging.getLogger("config_cli_gui")
         self.gui_handler = None
         self.file_handler = None
@@ -53,8 +56,7 @@ class LoggerManager:
         self.logger.handlers.clear()
 
         # Set log level from config
-        log_level = getattr(logging, self.config.app.log_level.value.upper())
-        self.logger.setLevel(log_level)
+        self.logger.setLevel(self.log_level)
 
         # Create formatters
         detailed_formatter = logging.Formatter(
@@ -138,19 +140,13 @@ class LoggerManager:
         Args:
             level: New log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         """
-        log_level = getattr(logging, level.upper())
-        self.logger.setLevel(log_level)
-
-        # Update config
-        self.config.app.log_level.value = level.upper()
+        self.log_level = level.upper()
+        self.logger.setLevel(self.log_level)
 
     def log_config_summary(self):
         """Log current configuration summary."""
         self.logger.info("=== Configuration Summary ===")
-        self.logger.info(f"Log level: {self.config.app.log_level.value}")
-        self.logger.info(f"Input: {self.config.cli.input.value}")
-        self.logger.info(f"Output: {self.config.cli.output.value}")
-        self.logger.info(f"Max workers: {self.config.app.max_workers.value}")
+        self.logger.info(f"Log level: {self.log_level}")
         self.logger.info("==============================")
 
 
@@ -158,7 +154,7 @@ class LoggerManager:
 _logger_manager = None
 
 
-def initialize_logging(config: ProjectConfigManager) -> LoggerManager:
+def initialize_logging(log_level: str = "INFO") -> LoggerManager:
     """Initialize the global logging system.
 
     Args:
@@ -168,7 +164,7 @@ def initialize_logging(config: ProjectConfigManager) -> LoggerManager:
         LoggerManager instance
     """
     global _logger_manager
-    _logger_manager = LoggerManager(config)
+    _logger_manager = LoggerManager(log_level)
     return _logger_manager
 
 

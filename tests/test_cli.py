@@ -120,7 +120,7 @@ def test_load_config_file_and_override(cli_gen):
             with patch("pathlib.Path.exists", return_value=True):
                 params = {}
 
-                def fake_main(conf):
+                def fake_main(conf, _logger):
                     nonlocal params
                     params["input"] = conf.cli.input.value
                     params["min_dist"] = conf.cli.min_dist.value

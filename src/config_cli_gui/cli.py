@@ -4,6 +4,7 @@
 import argparse
 import traceback
 from collections.abc import Callable
+from logging import Logger, getLogger
 from typing import Any
 
 from config_cli_gui.config import ConfigManager
@@ -103,12 +104,16 @@ class CliGenerator:
     # ----------------------------------------------------------------------
     def run_cli(
         self,
-        main_function: Callable[[ConfigManager], int],
+        main_function: Callable[[ConfigManager, Logger], int],
         description: str = None,
-        validator: Callable[[ConfigManager], bool] = None,
+        validator: Callable[[ConfigManager, Logger], bool] = None,
+        logger: Logger = None,
     ) -> int:
         parser = self.create_argument_parser(description)
         args = parser.parse_args()
+
+        if logger is None:
+            logger = getLogger(self.app_name)
 
         # Load config_file only ONCE
         config = ConfigManager(
@@ -121,17 +126,17 @@ class CliGenerator:
         config.apply_overrides(overrides)
 
         # Optional validation
-        if validator and not validator(config):
-            print("Configuration validation failed.")
+        if validator and not validator(config, logger):
+            logger.error("Configuration validation failed.")
             return 1
 
         # Execute main
         try:
-            return main_function(config)
+            return main_function(config, logger)
         except KeyboardInterrupt:
-            print("Interrupted.")
+            logger.info("Interrupted.")
             return 130
         except Exception as e:
-            print(f"Unexpected error: {e}")
-            traceback.print_exc()
+            logger.error(f"Unexpected error: {e}")
+            logger.debug(traceback.format_exc())
             return 1
