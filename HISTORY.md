@@ -4,6 +4,7 @@ Changelog
 
 (unreleased)
 ------------
+- Docs: Update HISTORY.md for release 0.2.9. [Paul Magister]
 - Refactoring: config parameters will stay ordered like in the config.
   [Paul Magister]
 - Refactoring: config parameters will stay ordered like in the config.
