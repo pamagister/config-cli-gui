@@ -613,9 +613,6 @@ class GenericSettingsDialog:
                 if isinstance(param_value, Font):
                     selected_font_name = widget.font_type_var.get()
                     font_type = selected_font_name
-                    if selected_font_name in widget.font_names:
-                        font_type = widget.font_files[widget.font_names.index(selected_font_name)]
-
                     font_size = widget.font_size_var.get()
                     font_color = Color.from_hex(widget.color_var.get())
                     overrides[key] = Font(font_type, font_size, font_color)

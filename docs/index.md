@@ -51,40 +51,58 @@ Start by defining your application's configuration parameters in a central `conf
 ```python
 # my_project/config_example.py
 
+from datetime import datetime
+from pathlib import Path
+
 from config_cli_gui.config import (
     ConfigCategory,
     ConfigManager,
     ConfigParameter,
 )
+from config_cli_gui.configtypes.color import Color
+from config_cli_gui.configtypes.font import Font
+from config_cli_gui.configtypes.vector import Vector
 
 
-class CliConfig(ConfigCategory):
-    """CLI-specific configuration parameters."""
-
+class MiscConfig(ConfigCategory):
     def get_category_name(self) -> str:
-        return "cli"
+        return "misc"
 
-    # Positional argument
-    input: ConfigParameter = ConfigParameter(
-        name="input",
-        default="",
-        help="Path to input (file or folder)",
-        required=True,
+    some_numeric: ConfigParameter = ConfigParameter(
+        name="some_numeric",
+        value=int(42),
+        help="Example integer",
         is_cli=True,
     )
 
-    min_dist: ConfigParameter = ConfigParameter(
-        name="min_dist",
-        default=20,
-        help="Maximum distance between two waypoints",
-        is_cli=True,
+    some_vector: ConfigParameter = ConfigParameter(
+        name="some_vector",
+        value=Vector(1, 2, 3),
+        help="Example vector",
     )
 
-    extract_waypoints: ConfigParameter = ConfigParameter(
-        name="extract_waypoints",
-        default=True,
-        help="Extract starting points of each track as waypoint",
-        is_cli=True,
+    some_file: ConfigParameter = ConfigParameter(
+        name="some_file",
+        value=Path("some_file.txt"),
+        help="Path to the file to use",
+    )
+
+    some_color: ConfigParameter = ConfigParameter(
+        name="some_color",
+        value=Color(255, 0, 0),
+        help="Color setting for the application",
+    )
+
+    some_date: ConfigParameter = ConfigParameter(
+        name="some_date",
+        value=datetime.fromisoformat("2025-12-31 10:30:45"),
+        help="Date setting for the application",
+    )
+
+    some_font: ConfigParameter = ConfigParameter(
+        name="some_font",
+        value=Font("DejaVuSans.ttf", size=12, color=Color(0, 0, 255)),
+        help="Font setting for the application",
     )
 
 
@@ -96,14 +114,14 @@ class AppConfig(ConfigCategory):
 
     log_level: ConfigParameter = ConfigParameter(
         name="log_level",
-        default="INFO",
+        value="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         help="Logging level for the application",
     )
 
     log_file_max_size: ConfigParameter = ConfigParameter(
         name="log_file_max_size",
-        default=10,
+        value=10,
         help="Maximum log file size in MB before rotation",
     )
 
@@ -111,11 +129,13 @@ class AppConfig(ConfigCategory):
 class ProjectConfigManager(ConfigManager):  # Inherit from ConfigManager
     """Main configuration manager that handles all parameter categories."""
 
-    categories = (CliConfig(), AppConfig())
-
+    app: AppConfig
+    misc: MiscConfig
+    
     def __init__(self, config_file: str | None = None, **kwargs):
         """Initialize the configuration manager with all parameter categories."""
-        super().__init__(self.categories, config_file, **kwargs)
+        categories = (MiscConfig(), AppConfig())
+        super().__init__(categories, config_file, **kwargs)
 
 
 ```

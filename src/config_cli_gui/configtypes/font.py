@@ -54,13 +54,19 @@ class Font:
         )
         return cls(str(font_type), float(size), color)
 
-    def get_image_font(self) -> ImageFont.FreeTypeFont:
-        """Return a PIL FreeTypeFont, with fallback to default."""
+    def get_image_font(self, dpi=25.4) -> ImageFont.FreeTypeFont:
+        """
+        Return a PIL FreeTypeFont, with fallback to default.
+
+        :param dpi: if dpi is provided, the font size is re-calculated on base of the dpi
+        :return:
+        """
         try:
             if self.name in self.font_names:
                 idx = self.font_names.index(self.name)
                 path = self.font_files_sorted[idx]
-                return ImageFont.truetype(path, int(self.size))
+                size = self.size * dpi / 25.4
+                return ImageFont.truetype(path, size)
         except Exception as e:
             print(f"Fehler beim Laden der Schrift '{self.name}': {e}")
 

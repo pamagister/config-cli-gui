@@ -41,10 +41,12 @@ The parameters in the cli category can be accessed via the command line interfac
 
 ## Category "misc"
 
-| Name       | Type      | Description                       | Default                                                      | Choices |
-|------------|-----------|-----------------------------------|--------------------------------------------------------------|---------|
-| some_file  | PosixPath | Path to the file to use           | PosixPath('some_file.txt')                                   | -       |
-| some_color | Color     | Color setting for the application | Color(255, 0, 0)                                             | -       |
-| some_date  | datetime  | Date setting for the application  | datetime.datetime(2025, 12, 31, 10, 30, 45)                  | -       |
-| some_font  | Font      | Font setting for the application  | Font(type='DejaVuSans.ttf', size=12, color=Color(0, 0, 255)) | -       |
+| Name         | Type      | Description                       | Default                                                      | Choices |
+|--------------|-----------|-----------------------------------|--------------------------------------------------------------|---------|
+| some_numeric | int       | Example integer                   | 42                                                           | -       |
+| some_vector  | Vector    | Example vector                    | Vector(1, 2, 3)                                              | -       |
+| some_file    | PosixPath | Path to the file to use           | PosixPath('some_file.txt')                                   | -       |
+| some_color   | Color     | Color setting for the application | Color(255, 0, 0)                                             | -       |
+| some_date    | datetime  | Date setting for the application  | datetime.datetime(2025, 12, 31, 10, 30, 45)                  | -       |
+| some_font    | Font      | Font setting for the application  | Font(type='DejaVuSans.ttf', size=12, color=Color(0, 0, 255)) | -       |
 

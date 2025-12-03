@@ -181,6 +181,18 @@ class MiscConfig(ConfigCategory):
     def get_category_name(self) -> str:
         return "misc"
 
+    some_numeric: ConfigParameter = ConfigParameter(
+        name="some_numeric",
+        value=42,
+        help="Example integer",
+    )
+
+    some_vector: ConfigParameter = ConfigParameter(
+        name="some_vector",
+        value=Vector(1, 2, 3),
+        help="Example vector",
+    )
+
     some_file: ConfigParameter = ConfigParameter(
         name="some_file",
         value=Path("some_file.txt"),

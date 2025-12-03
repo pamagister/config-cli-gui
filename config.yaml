@@ -55,3 +55,7 @@ misc:
   - DejaVuSans.ttf
   - 12
   - '#0000ff'
+  # Example integer | type=int
+  some_numeric: 42
+  # Example vector | type=Vector
+  some_vector: (1, 2, 3)
