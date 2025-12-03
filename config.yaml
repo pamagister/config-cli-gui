@@ -57,5 +57,7 @@ misc:
   - '#0000ff'
   # Example integer | type=int
   some_numeric: 42
-  # Example vector | type=Vector
-  some_vector: (1, 2, 3)
+  # Example vector 2D | type=Vector
+  some_vector2d: (1, 2)
+  # Example vector 3D | type=Vector
+  some_vector3d: (1.1, 2.2, 3.3)

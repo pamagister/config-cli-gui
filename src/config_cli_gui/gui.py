@@ -526,13 +526,27 @@ class GenericSettingsDialog:
         """Create vector editor widget."""
         frame = ttk.Frame(parent)
 
-        vector_value = param.value if isinstance(param.value, Vector) else Vector()
-        var = tk.StringVar(value=vector_value.to_str().strip("()[]"))
-        entry = ttk.Entry(frame, textvariable=var)
-        entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        vector_value = param.value if isinstance(param.value, Vector) else Vector(0, 0)
 
-        frame.var = var
-        frame.entry_widget = entry
+        components = vector_value.to_list()
+
+        frame.vars = []
+        for value in components:
+            var = tk.DoubleVar(value=value)
+            spinbox = ttk.Spinbox(
+                frame,
+                from_=-999999.0,
+                to=999999.0,
+                increment=1.0,
+                textvariable=var,
+                width=8,
+            )
+            spinbox.pack(side=tk.LEFT, padx=(0, 5))
+            frame.vars.append(var)
+
+        if frame.winfo_children():
+            frame.entry_widget = frame.winfo_children()[0]
+
         return frame
 
     def _create_datetime_widget(self, parent, param: ConfigParameter):
@@ -618,6 +632,11 @@ class GenericSettingsDialog:
                     overrides[key] = Font(font_type, font_size, font_color)
                     continue
 
+                if isinstance(param_value, Vector):
+                    components = [v.get() for v in widget.vars]
+                    overrides[key] = Vector.from_list(components)
+                    continue
+
                 value = widget.var.get()
 
                 # Convert value to appropriate type
@@ -638,8 +657,6 @@ class GenericSettingsDialog:
                     import json
 
                     overrides[key] = json.loads(value)
-                elif type(param_value) == Vector:
-                    overrides[key] = Vector.from_str(value)
                 elif type(param_value) == int:
                     overrides[key] = int(value)
                 elif type(param_value) == float:

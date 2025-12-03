@@ -187,10 +187,16 @@ class MiscConfig(ConfigCategory):
         help="Example integer",
     )
 
-    some_vector: ConfigParameter = ConfigParameter(
-        name="some_vector",
-        value=Vector(1, 2, 3),
-        help="Example vector",
+    some_vector2d: ConfigParameter = ConfigParameter(
+        name="some_vector2d",
+        value=Vector(1, 2),
+        help="Example vector 2D",
+    )
+
+    some_vector3d: ConfigParameter = ConfigParameter(
+        name="some_vector3d",
+        value=Vector(1.1, 2.2, 3.3),
+        help="Example vector 3D",
     )
 
     some_file: ConfigParameter = ConfigParameter(
