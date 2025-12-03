@@ -43,7 +43,12 @@ def test_color_basic():
 def test_font_basic():
     f = Font("DejaVuSans.ttf", size=12, color=Color(255, 0, 0))
     assert f.to_list() == ["DejaVuSans.ttf", 12, "#ff0000"]
-    assert str(f) == "DejaVuSans.ttf, 12pt, #ff0000"
+    assert str(f) == "DejaVuSans.ttf, 12, #ff0000"
+    assert f.to_str() == "DejaVuSans.ttf, 12, #ff0000"
+    assert f.get_image_font() is not None
+    assert f.__repr__() == "Font(type='DejaVuSans.ttf', size=12, color=Color(255, 0, 0))"
+    f2 = Font.from_str("DejaVuSans.ttf, 12, #ff0000")
+    assert f2.to_list() == ["DejaVuSans.ttf", 12, "#ff0000"]
 
 
 def test_vector_2d():

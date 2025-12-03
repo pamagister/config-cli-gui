@@ -54,6 +54,40 @@ class Font:
         )
         return cls(str(font_type), float(size), color)
 
+    def to_str(self) -> str:
+        return f"{self.name}, {self.size}, {self.color.to_hex()}"
+
+    @classmethod
+    def from_str(cls, font_init_str: str) -> "Font":
+        """
+        Parses a string of the form:
+            "FontName, size, #rrggbb"
+        or alternative color formats.
+        """
+        if not isinstance(font_init_str, str):
+            return cls("Arial", 12, Color(0, 0, 0))
+
+        parts = [p.strip() for p in font_init_str.split(",")]
+
+        # at least name, size, color
+        if len(parts) < 3:
+            return cls("Arial", 12, Color(0, 0, 0))
+
+        # parse font name
+        font_name = parts[0]
+
+        # parse size
+        try:
+            size = float(parts[1])
+        except ValueError:
+            size = 12.0
+
+        # parse color
+        color_raw = ",".join(parts[2:]).strip()
+        color = Color.from_hex(color_raw)
+
+        return cls(font_name, size, color)
+
     def get_image_font(self, dpi=25.4) -> ImageFont.FreeTypeFont:
         """
         Return a PIL FreeTypeFont, with fallback to default.
@@ -77,4 +111,4 @@ class Font:
         return f"Font(type='{self.name}', size={self.size}, color={self.color!r})"
 
     def __str__(self) -> str:
-        return f"{self.name}, {self.size}pt, {self.color}"
+        return f"{self.to_str()}"

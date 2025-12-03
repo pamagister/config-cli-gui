@@ -56,7 +56,5 @@ misc:
   some_color: '#ff0000'
   # Date setting for the application | type=datetime
   some_date: '2025-12-31T10:30:45'
-  some_font:
-  - DejaVuSans.ttf
-  - 12
-  - '#0000ff'
+  # Font setting for the application | type=Font
+  some_font: 'DejaVuSans.ttf, 12, #0000ff'

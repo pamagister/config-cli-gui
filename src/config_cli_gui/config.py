@@ -61,8 +61,10 @@ class ConfigSerializer:
 
     TYPE_MAPPING = {
         Font: {
-            "to_serializable": lambda v: v.to_list(),
-            "from_serializable": lambda v: Font.from_list(v) if isinstance(v, list) else v,
+            "to_serializable": lambda v: v.to_str(),
+            "from_serializable": lambda v: Font.from_list(v)
+            if isinstance(v, list)
+            else Font.from_str(v),
         },
         Color: {
             "to_serializable": lambda v: v.to_hex(),
