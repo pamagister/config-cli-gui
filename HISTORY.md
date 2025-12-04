@@ -4,6 +4,12 @@ Changelog
 
 (unreleased)
 ------------
+- Update all libs. [Paul Magister]
+
+
+0.3.1 (2025-12-04)
+------------------
+- Docs: Update HISTORY.md for release 0.3.1. [Paul Magister]
 - Fix typings, improve cli test. [Paul Magister]
 - Update README.md from docs/index.md. [github-actions]
 - Improve doc. [Paul Magister]
