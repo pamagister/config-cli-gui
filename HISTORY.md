@@ -4,6 +4,15 @@ Changelog
 
 (unreleased)
 ------------
+- Fix typings, improve cli test. [Paul Magister]
+- Update README.md from docs/index.md. [github-actions]
+- Improve doc. [Paul Magister]
+- Search for some more paths in windows. [Paul Magister]
+
+
+0.3.0 (2025-12-03)
+------------------
+- Docs: Update HISTORY.md for release 0.3.0. [Paul Magister]
 - Docs: Update HISTORY.md for release 0.2.9. [Paul Magister]
 - Refactoring: config parameters will stay ordered like in the config.
   [Paul Magister]
