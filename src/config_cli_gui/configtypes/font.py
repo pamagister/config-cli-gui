@@ -8,22 +8,36 @@ from config_cli_gui.configtypes.color import Color
 
 
 def list_system_fonts() -> list[str]:
+    # Common font directories on Linux, macOS, Windows
     font_dirs = [
+        # Linux
         "/usr/share/fonts",
         "/usr/local/share/fonts",
         str(Path.home() / ".fonts"),
+        str(Path.home() / ".local/share/fonts"),
+        # macOS system + user
         "/Library/Fonts",
         "/System/Library/Fonts",
+        str(Path.home() / "Library/Fonts"),
+        "/Network/Library/Fonts",
+        # Windows system + user-scoped installed fonts
         "C:/Windows/Fonts",
+        str(Path(os.environ.get("LOCALAPPDATA", "") + "/Microsoft/Windows/Fonts")),
     ]
 
     fonts: list[str] = []
+    seen = set()  # Prevent duplicates
+
     for d in font_dirs:
-        if os.path.isdir(d):
+        if d and os.path.isdir(d):
             for root, _, files in os.walk(d):
                 for f in files:
-                    if f.lower().endswith((".ttf", ".otf")):
-                        fonts.append(os.path.join(root, f))
+                    if f.lower().endswith((".ttf", ".otf", ".ttc", ".woff", ".woff2")):
+                        full = os.path.join(root, f)
+                        if full not in seen:
+                            seen.add(full)
+                            fonts.append(full)
+
     return fonts
 
 
@@ -95,17 +109,22 @@ class Font:
         :param dpi: if dpi is provided, the font size is re-calculated on base of the dpi
         :return:
         """
+        size = self.size * dpi / 25.4
         try:
             if self.name in self.font_names:
                 idx = self.font_names.index(self.name)
                 path = self.font_files_sorted[idx]
-                size = self.size * dpi / 25.4
-                return ImageFont.truetype(path, size)
+                return ImageFont.truetype(font=path, size=size)
         except Exception as e:
-            print(f"Fehler beim Laden der Schrift '{self.name}': {e}")
+            print(f"Error loading font '{self.name}': {e}")
+            fallback_font = "Arial.ttf"
+            try:
+                return ImageFont.truetype(font=fallback_font, size=size)
+            except Exception as e:
+                print(f"Error loading default fallback font '{fallback_font}': {e}")
 
-        print("Fallback: Nutze Default-Font.")
-        return ImageFont.load_default()
+        print("Fallback: use Default-Font.")
+        return ImageFont.load_default(size=size)
 
     def __repr__(self) -> str:
         return f"Font(type='{self.name}', size={self.size}, color={self.color!r})"
