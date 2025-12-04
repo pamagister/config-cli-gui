@@ -35,11 +35,33 @@ pip install config-cli-gui
 ## ✨ Features
 
   * **Single Source of Truth**: Define all your application parameters in one place using simple, dataclass-like structures based on Pydantic's `BaseModel`. This ensures consistency and reduces errors across your application.
+
+    ```yaml
+    gui:
+      # GUI theme setting | type=str | choices=['light', 'dark', 'auto']
+      theme: light
+    misc:
+      # Example integer | type=int
+      some_numeric: 42
+      # Path to the file to use | type=PosixPath
+      some_file: some_file.txt
+      # Color setting for the application | type=Color
+      some_color: '#ff0000'
+      # Font setting for the application | type=Font
+      some_font: 'DejaVuSans.ttf, 12, #0000ff'
+    ```
+
   * **Categorized Configuration**: Organize your parameters into logical categories (e.g., `cli`, `app`, `gui`) for better structure and maintainability.
   * **Dynamic CLI Generation**: Automatically generate `argparse`-compatible command-line arguments directly from your defined configuration parameters, including help texts, types, and choices.
   * **Config File Management**: Easily load and save configurations from/to YAML or JSON files, allowing users to customize default settings.
   * **GUI Settings Dialogs**: Dynamically create Tkinter-based settings dialogs for your application, allowing users to intuitively modify configuration parameters via a graphical interface.
+
+    ![settings_dlg.png](_static/img/settings_dlg.png)
+ 
   * **Documentation Generation**: Generate detailed Markdown documentation for both your CLI options and all configuration parameters, keeping your user guides always up-to-date with your codebase.
+
+    ![settings_doc.png](_static/img/settings_doc.png)
+
   * **Override System**: Supports robust overriding of configuration values via configuration files and command-line arguments, with clear precedence.
 
 ---
