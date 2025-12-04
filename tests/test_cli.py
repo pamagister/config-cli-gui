@@ -155,3 +155,21 @@ def test_cli_overrides_applied_correctly(cli_gen):
     assert overrides["cli__min_dist"] == "55" or overrides["cli__min_dist"] == 55
     assert overrides["cli__output"] == "out.gpx"
     assert overrides["cli__input"] == "tests/input.gpx"
+
+
+def test_verbosity_arguments(cli_gen):
+    # Test --verbose
+    argv_verbose = ["prog", "--verbose", "tests/input.gpx"]
+    with patch.object(sys, "argv", argv_verbose):
+        parser_verbose = cli_gen.create_argument_parser()
+        args_verbose = parser_verbose.parse_args()
+        overrides_verbose = cli_gen.create_config_overrides(args_verbose)
+    assert overrides_verbose["app__log_level"] == "DEBUG"
+
+    # Test --quiet
+    argv_quiet = ["prog", "--quiet", "tests/input.gpx"]
+    with patch.object(sys, "argv", argv_quiet):
+        parser_quiet = cli_gen.create_argument_parser()
+        args_quiet = parser_quiet.parse_args()
+        overrides_quiet = cli_gen.create_config_overrides(args_quiet)
+    assert overrides_quiet["app__log_level"] == "WARNING"

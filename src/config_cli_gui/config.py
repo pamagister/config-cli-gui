@@ -1,5 +1,6 @@
 import json
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -133,6 +134,10 @@ class ConfigManager:
     def get_category(self, name: str) -> ConfigCategory | None:
         """Retrieve a category by name."""
         return self._categories.get(name)
+
+    def get_categories(self) -> tuple[ConfigCategory, ...]:
+        values: Iterable[ConfigCategory] = self._categories.values()
+        return tuple(values)
 
     def apply_overrides(self, overrides: dict[str, Any]) -> None:
         """Apply keyword overrides in the format `category__param=value`."""

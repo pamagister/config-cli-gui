@@ -62,7 +62,7 @@ class CliGenerator:
                 continue
 
             # OPTIONAL FLAG
-            kwargs = {
+            kwargs: dict[str, Any] = {
                 "help": f"{p.help} (default: {p.value})",
                 "default": argparse.SUPPRESS,
             }
@@ -117,7 +117,7 @@ class CliGenerator:
 
         # Load config_file only ONCE
         config = ConfigManager(
-            categories=tuple(self.config_manager._categories.values()),
+            categories=self.config_manager.get_categories(),
             config_file=getattr(args, "config", None),
         )
 
