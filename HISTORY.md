@@ -4,6 +4,12 @@ Changelog
 
 (unreleased)
 ------------
+- Update to minimum python 3.11. [Paul Magister]
+
+
+0.3.2 (2025-12-04)
+------------------
+- Docs: Update HISTORY.md for release 0.3.2. [Paul Magister]
 - Update all libs. [Paul Magister]
 
 
