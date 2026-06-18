@@ -4,6 +4,14 @@ Changelog
 
 (unreleased)
 ------------
+- Bugfix: init color display properly. [Paul Magister]
+- Use ttkbootstrap gui styles. [Paul Magister]
+- Improve GUI scaling and font sizes. [Paul Magister]
+
+
+0.3.3 (2026-06-13)
+------------------
+- Docs: Update HISTORY.md for release 0.3.3. [Paul Magister]
 - Update to minimum python 3.11. [Paul Magister]
 
 
