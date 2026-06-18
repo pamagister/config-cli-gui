@@ -120,8 +120,13 @@ class MainGui:
         # Initialize configuration
         self._config = ProjectConfigManager("config.yaml")
 
-        # Initialize logging system
-        self.logger_manager = initialize_logging(self._config.app.log_level.value)
+        # Initialize logging system using individual AppConfig values
+        self.logger_manager = initialize_logging(
+            log_level=self._config.app.log_level.value,
+            log_file_max_size=self._config.app.log_file_max_size.value,
+            enable_file_logging=self._config.app.enable_file_logging.value,
+            enable_console_logging=self._config.app.enable_console_logging.value,
+        )
         self.logger = get_logger("gui.main")
 
         # File lists

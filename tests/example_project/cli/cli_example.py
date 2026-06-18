@@ -74,7 +74,12 @@ def main():
     config_manager = ProjectConfigManager()
 
     # Initialize logging and get a logger
-    logger_manager = initialize_logging(config_manager.app.log_level.value)
+    logger_manager = initialize_logging(
+        log_level=config_manager.app.log_level.value,
+        log_file_max_size=config_manager.app.log_file_max_size.value,
+        enable_file_logging=config_manager.app.enable_file_logging.value,
+        enable_console_logging=config_manager.app.enable_console_logging.value,
+    )
     logger = logger_manager.get_logger("cli.main")
 
     cli_generator = CliGenerator(

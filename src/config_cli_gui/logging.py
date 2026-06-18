@@ -45,13 +45,21 @@ class GuiLogHandler(logging.Handler):
 
 
 class LoggerManager:
-    """Manages all logging configuration and handlers."""
+    """Manages all logging configuration and handlers.
+
+    Accepts explicit parameters for integration with the project's
+    configuration system. All file-size related checks are performed once
+    during initialization and clamped to the allowed range.
+    """
 
     def __init__(
         self,
         log_level: str = "INFO",
         log_dir: Path = Path("logs"),
         log_file_name: str = "config_cli_gui.log",
+        log_file_max_size: int | None = None,
+        enable_file_logging: bool = True,
+        enable_console_logging: bool = True,
     ):
         """
         Initialize the logger manager.
@@ -59,10 +67,33 @@ class LoggerManager:
             log_level: The initial log level (e.g., "DEBUG", "INFO").
             log_dir: The directory to store log files.
             log_file_name: The name of the log file.
+            log_file_max_size: Maximum log file size in MB (clamped to 0..100).
+            enable_file_logging: Whether to enable file logging.
+            enable_console_logging: Whether to enable console logging.
         """
         self.log_level = log_level.upper()
         self.log_dir = log_dir
         self.log_file_name = log_file_name
+
+        # Validate and clamp file size (MB). Must be >= 0 and <= 100.
+        if log_file_max_size is None:
+            # keep the previous hard-coded default of 10 MB when not provided
+            self.log_file_max_size_mb = 10
+        else:
+            try:
+                size_mb = int(log_file_max_size)
+            except Exception:
+                size_mb = 10
+            # clamp to allowed range
+            if size_mb < 0:
+                size_mb = 0
+            if size_mb > 100:
+                size_mb = 100
+            self.log_file_max_size_mb = size_mb
+
+        # Enable/disable handlers
+        self.enable_file_logging = bool(enable_file_logging)
+        self.enable_console_logging = bool(enable_console_logging)
 
         self.logger = logging.getLogger("config_cli_gui")
         self.gui_handler: GuiLogHandler | None = None
@@ -87,12 +118,20 @@ class LoggerManager:
 
     def _setup_file_handler(self, formatter: logging.Formatter) -> None:
         """Set up a rotating file handler."""
+        # Only create file handler when enabled
+        if not self.enable_file_logging:
+            self.file_handler = None
+            return
+
         self.log_dir.mkdir(exist_ok=True)
         log_file = self.log_dir / self.log_file_name
 
+        max_bytes = int(self.log_file_max_size_mb) * 1024 * 1024
+
+        # If max_bytes is 0, RotatingFileHandler will effectively never rotate.
         self.file_handler = logging.handlers.RotatingFileHandler(
             log_file,
-            maxBytes=10 * 1024 * 1024,  # 10MB
+            maxBytes=max_bytes,
             backupCount=5,
             encoding="utf-8",
         )
@@ -101,6 +140,10 @@ class LoggerManager:
 
     def _setup_console_handler(self, formatter: logging.Formatter) -> None:
         """Set up a console handler."""
+        if not self.enable_console_logging:
+            self.console_handler = None
+            return
+
         self.console_handler = logging.StreamHandler(sys.stdout)
         self.console_handler.setFormatter(formatter)
         self.logger.addHandler(self.console_handler)
@@ -158,17 +201,48 @@ class LoggerManager:
 _logger_manager: LoggerManager | None = None
 
 
-def initialize_logging(log_level: str = "INFO") -> LoggerManager:
+def initialize_logging(
+    log_level: str = "INFO",
+    log_file_max_size: int | None = None,
+    enable_file_logging: bool | None = None,
+    enable_console_logging: bool | None = None,
+    log_dir: Path | None = None,
+    log_file_name: str | None = None,
+) -> LoggerManager:
     """
     Initialize the global logging system.
+
+    Accepts individual configuration values (no dependency on AppConfig).
     Args:
         log_level: The initial log level.
+        log_file_max_size: Maximum log file size in MB (clamped to 0..100).
+        enable_file_logging: Enable or disable file logging. When None, defaults to True.
+        enable_console_logging: Enable or disable console logging. When None, defaults to True.
+        log_dir: Directory for log files. When None, defaults to Path('logs').
+        log_file_name: Log filename. When None, defaults to 'config_cli_gui.log'.
     Returns:
         The initialized LoggerManager instance.
     """
     global _logger_manager
     if _logger_manager is None:
-        _logger_manager = LoggerManager(log_level)
+        # Defaults: file and console logging enabled unless explicitly disabled
+        if enable_file_logging is None:
+            enable_file_logging = True
+        if enable_console_logging is None:
+            enable_console_logging = True
+        if log_dir is None:
+            log_dir = Path("logs")
+        if log_file_name is None:
+            log_file_name = "config_cli_gui.log"
+
+        _logger_manager = LoggerManager(
+            log_level=log_level,
+            log_dir=log_dir,
+            log_file_name=log_file_name,
+            log_file_max_size=log_file_max_size,
+            enable_file_logging=enable_file_logging,
+            enable_console_logging=enable_console_logging,
+        )
     return _logger_manager
 
 

@@ -192,7 +192,7 @@ def test_get_all_parameters():
     cat = ExampleCategory()
     mgr = ConfigManager((cat,))
     params = mgr.get_all_parameters()
-    assert len(params) == 4
+    assert len(params) == 10
 
 
 def test_get_cli_parameters():

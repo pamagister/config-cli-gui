@@ -136,15 +136,8 @@ class AppConfig(ConfigCategory):
 
     log_file_max_size: ConfigParameter = ConfigParameter(
         name="log_file_max_size",
-        value=10,
+        value=2,
         help="Maximum log file size in MB before rotation",
-    )
-
-    log_format: ConfigParameter = ConfigParameter(
-        name="log_format",
-        value="detailed",
-        choices=["simple", "detailed", "json"],
-        help="Log message format style",
     )
 
     enable_file_logging: ConfigParameter = ConfigParameter(

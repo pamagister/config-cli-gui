@@ -4,9 +4,7 @@ app:
   # Logging level for the application | type=str | choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
   log_level: INFO
   # Maximum log file size in MB before rotation | type=int
-  log_file_max_size: 10
-  # Log message format style | type=str | choices=['simple', 'detailed', 'json']
-  log_format: detailed
+  log_file_max_size: 2
   # Enable logging to file | type=bool | choices=[True, False]
   enable_file_logging: true
   # Enable logging to console | type=bool | choices=[True, False]
