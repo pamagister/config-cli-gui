@@ -438,6 +438,7 @@ class GenericSettingsDialog:
 
         pick_btn = ttk.Button(frame, text="Pick", command=pick_color)
         pick_btn.pack(side=tk.LEFT, padx=(5, 0))
+        color_display.config(bg=color_value.to_hex())
 
         def on_color_change(*args):
             try:
@@ -476,6 +477,7 @@ class GenericSettingsDialog:
         color_var = tk.StringVar(value=font_value.color.to_hex())
         color_display = tk.Label(frame, width=8, bg=font_value.color.to_hex())
         color_display.pack(side=tk.LEFT, padx=(8, 2))
+        color_display.config(bg=font_value.color.to_hex())
 
         def pick_color():
             color = colorchooser.askcolor(color=color_var.get())
