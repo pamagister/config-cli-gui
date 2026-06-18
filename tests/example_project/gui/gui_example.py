@@ -308,7 +308,7 @@ class MainGui:
         # Connect to logging system - support object with write() method
         try:
             self.logger.debug("Connecting GUI log writer to logging system")
-            connect_gui_logging(self.gui_log_writer)
+            connect_gui_logging(self.gui_log_writer.write)
             self.logger.info("GUI logging connected")
         except Exception as e:
             # Keep the GUI running even if connecting GUI logging fails

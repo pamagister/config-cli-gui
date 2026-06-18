@@ -281,16 +281,7 @@ def connect_gui_logging(writer: Callable[[str], None]) -> None:
         writer: A GUI writer object with a write() method.
     """
     manager = get_logger_manager()
-    # Support both a callable writer (e.g. a function) and objects that expose
-    # a .write(text) method (common for file-like or GUI writer objects).
-    if hasattr(writer, "write") and callable(getattr(writer, "write")):
-        manager.connect_gui_writer(getattr(writer, "write"))
-    elif callable(writer):
-        manager.connect_gui_writer(writer)
-    else:
-        raise TypeError(
-            "connect_gui_logging requires a callable or an object with a .write(text) method"
-        )
+    manager.connect_gui_writer(writer)
 
 
 def disconnect_gui_logging() -> None:
