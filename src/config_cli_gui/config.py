@@ -109,6 +109,81 @@ class ConfigSerializer:
         return value
 
 
+class AppConfig(ConfigCategory):
+    """Application-specific configuration parameters (centralized).
+
+    This category was moved from example project to the core library so that
+    every project uses a consistent, non-editable application configuration
+    section. It contains general application settings such as logging and
+    theme preferences.
+    """
+
+    def get_category_name(self) -> str:
+        return "app"
+
+    date_format: ConfigParameter = ConfigParameter(
+        name="date_format",
+        value="%Y-%m-%d",
+        help="Date format to use",
+    )
+
+    log_level: ConfigParameter = ConfigParameter(
+        name="log_level",
+        value="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="Logging level for the application",
+    )
+
+    log_file_max_size: ConfigParameter = ConfigParameter(
+        name="log_file_max_size",
+        value=10,
+        help="Maximum log file size in MB before rotation",
+    )
+
+    log_format: ConfigParameter = ConfigParameter(
+        name="log_format",
+        value="detailed",
+        choices=["simple", "detailed", "json"],
+        help="Log message format style",
+    )
+
+    enable_file_logging: ConfigParameter = ConfigParameter(
+        name="enable_file_logging",
+        value=True,
+        help="Enable logging to file",
+    )
+
+    enable_console_logging: ConfigParameter = ConfigParameter(
+        name="enable_console_logging",
+        value=True,
+        help="Enable logging to console",
+    )
+
+    # ttkbootstrap.Style().theme_names()
+    theme: ConfigParameter = ConfigParameter(
+        name="theme",
+        value="darkly",
+        choices=[
+            "cosmo",
+            "flatly",
+            "litera",
+            "minty",
+            "lumen",
+            "sandstone",
+            "yeti",
+            "pulse",
+            "united",
+            "darkly",
+            "superhero",
+            "solar",
+            "cyborg",
+            "vapor",
+            "simplex",
+        ],
+        help="GUI theme setting supported by ttkbootstrap",
+    )
+
+
 class ConfigManager:
     """Manages loading, saving, and accessing configuration categories."""
 
@@ -120,7 +195,9 @@ class ConfigManager:
     ):
         self._categories: dict[str, ConfigCategory] = {}
         self._serializer = ConfigSerializer()
+        self.app: AppConfig = AppConfig()
 
+        categories = (self.app, *categories)
         for category in categories:
             if not isinstance(category, ConfigCategory):
                 raise TypeError(f"Expected ConfigCategory instance, got {type(category)}")

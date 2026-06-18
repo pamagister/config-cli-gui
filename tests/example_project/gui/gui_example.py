@@ -540,7 +540,7 @@ def main():
     else:
         _config = ProjectConfigManager()
 
-    theme_choice = _config.gui.theme.value
+    theme_choice = _config.app.theme.value
 
     root: ttkbootstrap.Window = ttkbootstrap.Window(themename=theme_choice)
 

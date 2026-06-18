@@ -65,73 +65,7 @@ class CliConfig(ConfigCategory):
     )
 
 
-class AppConfig(ConfigCategory):
-    """Application-specific configuration parameters."""
-
-    def get_category_name(self) -> str:
-        return "app"
-
-    date_format: ConfigParameter = ConfigParameter(
-        name="date_format",
-        value="%Y-%m-%d",
-        help="Date format to use",
-    )
-
-    log_level: ConfigParameter = ConfigParameter(
-        name="log_level",
-        value="INFO",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging level for the application",
-    )
-
-    log_file_max_size: ConfigParameter = ConfigParameter(
-        name="log_file_max_size",
-        value=10,
-        help="Maximum log file size in MB before rotation",
-    )
-
-    log_format: ConfigParameter = ConfigParameter(
-        name="log_format",
-        value="detailed",
-        choices=["simple", "detailed", "json"],
-        help="Log message format style",
-    )
-
-    enable_file_logging: ConfigParameter = ConfigParameter(
-        name="enable_file_logging",
-        value=True,
-        help="Enable logging to file",
-    )
-
-    enable_console_logging: ConfigParameter = ConfigParameter(
-        name="enable_console_logging",
-        value=True,
-        help="Enable logging to console",
-    )
-
-    # ttkbootstrap.Style().theme_names()
-    theme: ConfigParameter = ConfigParameter(
-        name="theme",
-        value="darkly",
-        choices=[
-            "cosmo",
-            "flatly",
-            "litera",
-            "minty",
-            "lumen",
-            "sandstone",
-            "yeti",
-            "pulse",
-            "united",
-            "darkly",
-            "superhero",
-            "solar",
-            "cyborg",
-            "vapor",
-            "simplex",
-        ],
-        help="GUI theme setting suppoerted by ttkbootstrap",
-    )
+# AppConfig is provided by the core library (centralized). See src/config_cli_gui/config.py
 
 
 class GuiConfig(ConfigCategory):
@@ -234,13 +168,12 @@ class ProjectConfigManager(ConfigManager):  # Inherit from ConfigManager
     """Main configuration manager that handles all parameter categories."""
 
     cli: CliConfig
-    app: AppConfig
     gui: GuiConfig
     misc: MiscConfig
 
     def __init__(self, config_file: str | None = None, **kwargs):
         """Initialize the configuration manager with all parameter categories."""
-        categories = (CliConfig(), AppConfig(), GuiConfig(), MiscConfig())
+        categories = (CliConfig(), GuiConfig(), MiscConfig())
         super().__init__(categories, config_file, **kwargs)
 
 

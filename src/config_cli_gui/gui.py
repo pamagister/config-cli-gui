@@ -213,7 +213,7 @@ class GenericSettingsDialog:
         config_file="config.yaml",
     ):
         self.parent = parent
-        self.config_manager = config_manager
+        self.config_manager: ConfigManager = config_manager
         self.config_file = config_file
         self.result = None
         self.widgets = {}
@@ -636,7 +636,17 @@ class GenericSettingsDialog:
     def _on_ok(self):
         """Handle OK button click."""
         try:
+            # Remember old theme to detect changes
+            try:
+                old_theme = self.config_manager.app.theme.value
+            except Exception:
+                old_theme = None
+
             self.__persist_settings()
+
+            # Apply GUI updates (theme change etc.) after persisting
+            self._apply_gui_updates(old_theme)
+
             self.dialog.destroy()
 
         except Exception as e:
@@ -698,6 +708,30 @@ class GenericSettingsDialog:
 
         self.result = "ok"
 
+    def _apply_gui_updates(self, old_theme=None):
+        """Apply GUI-level updates that should happen after settings are persisted.
+
+        Currently this changes the ttkbootstrap theme if it was modified. The
+        logic is centralized here so it can be called from both Apply and OK
+        handlers.
+        """
+        try:
+            new_theme = None
+            try:
+                new_theme = self.config_manager.app.theme.value
+            except Exception:
+                new_theme = None
+
+            if new_theme and new_theme != old_theme:
+                try:
+                    ttkbootstrap.Style().theme_use(new_theme)
+                except Exception:
+                    # Best-effort; don't crash the settings dialog if theme switch fails
+                    pass
+        except Exception:
+            # Swallow any unexpected errors to keep UI responsive
+            pass
+
     def _on_cancel(self):
         """Handle Cancel button click."""
         self.result = "cancel"
@@ -710,26 +744,14 @@ class GenericSettingsDialog:
         applies the theme change live if the GUI theme parameter is present.
         """
         try:
-            # Remember current theme to detect changes
+            # Remember current theme, persist settings and apply GUI updates
             try:
-                old_theme = self.config_manager.gui.theme.value
+                old_theme = self.config_manager.app.theme.value
             except Exception:
                 old_theme = None
 
             self.__persist_settings()
-
-            # If the GUI theme changed, try to apply it live.
-            try:
-                new_theme = self.config_manager.gui.theme.value
-                if new_theme and new_theme != old_theme:
-                    try:
-                        # ttkbootstrap supports theme switching via Style.theme_use
-                        ttkbootstrap.Style().theme_use(new_theme)
-                    except Exception:
-                        # Best-effort: do not raise; if it fails, user can restart app
-                        pass
-            except Exception:
-                pass
+            self._apply_gui_updates(old_theme)
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save configuration: {e}")
