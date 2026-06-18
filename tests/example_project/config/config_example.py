@@ -8,6 +8,7 @@ and documentation from the parameter definitions.
 from datetime import datetime
 from pathlib import Path
 
+# import ttkbootstrap
 from config_cli_gui.config import (
     ConfigCategory,
     ConfigManager,
@@ -127,11 +128,28 @@ class GuiConfig(ConfigCategory):
     def get_category_name(self) -> str:
         return "gui"
 
+    # ttkbootstrap.Style().theme_names()
     theme: ConfigParameter = ConfigParameter(
         name="theme",
-        value="light",
-        choices=["light", "dark", "auto"],
-        help="GUI theme setting",
+        value="darkly",
+        choices=[
+            "cosmo",
+            "flatly",
+            "litera",
+            "minty",
+            "lumen",
+            "sandstone",
+            "yeti",
+            "pulse",
+            "united",
+            "darkly",
+            "superhero",
+            "solar",
+            "cyborg",
+            "vapor",
+            "simplex",
+        ],
+        help="GUI theme setting suppoerted by ttkbootstrap",
     )
 
     window_width: ConfigParameter = ConfigParameter(

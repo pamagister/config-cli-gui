@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import colorchooser, filedialog, messagebox, ttk
 
+import ttkbootstrap
 from PIL import Image, ImageDraw, ImageTk
 
 from config_cli_gui.config import (
@@ -205,7 +206,11 @@ class GenericSettingsDialog:
     """Generic settings dialog for ConfigManager."""
 
     def __init__(
-        self, parent, config_manager: ConfigManager, title="Settings", config_file="config.yaml"
+        self,
+        parent: ttkbootstrap.Window | tk.Tk,
+        config_manager: ConfigManager,
+        title="Settings",
+        config_file="config.yaml",
     ):
         self.parent = parent
         self.config_manager = config_manager
@@ -246,6 +251,10 @@ class GenericSettingsDialog:
         button_frame = ttk.Frame(main_frame)
         button_frame.pack(fill=tk.X, pady=(10, 0))
 
+        # Apply: apply current settings (in-memory) but keep dialog open
+        ttk.Button(button_frame, text="Apply", command=self._on_apply).pack(
+            side=tk.RIGHT, padx=(5, 0)
+        )
         ttk.Button(button_frame, text="OK", command=self._on_ok).pack(side=tk.RIGHT, padx=(5, 0))
         ttk.Button(button_frame, text="Cancel", command=self._on_cancel).pack(side=tk.RIGHT)
 
@@ -450,7 +459,11 @@ class GenericSettingsDialog:
         # Font type
         font_type_var = tk.StringVar(value=os.path.basename(font_value.name))
         font_type_combo = ttk.Combobox(
-            frame, textvariable=font_type_var, values=Font.font_names, state="readonly", width=25
+            frame,
+            textvariable=font_type_var,
+            values=Font.font_names,
+            state="readonly",
+            width=25,
         )
         font_type_combo.pack(side=tk.LEFT, padx=(0, 5))
 
@@ -503,7 +516,11 @@ class GenericSettingsDialog:
             text = "Sample"
 
             draw.text(
-                (img_width / 2, img_height / 2), text, fill=font_color_hex, font=font, anchor="mm"
+                (img_width / 2, img_height / 2),
+                text,
+                fill=font_color_hex,
+                font=font,
+                anchor="mm",
             )
 
             photo = ImageTk.PhotoImage(img)
@@ -617,66 +634,81 @@ class GenericSettingsDialog:
     def _on_ok(self):
         """Handle OK button click."""
         try:
-            # Update configuration with widget values
-            overrides = {}
-            for key, widget in self.widgets.items():
-                category_name, param_name = key.split("__", 1)
-                category = self.config_manager.get_category(category_name)
-                param_value = getattr(category, param_name).value
-
-                if isinstance(param_value, Font):
-                    selected_font_name = widget.font_type_var.get()
-                    font_type = selected_font_name
-                    font_size = widget.font_size_var.get()
-                    font_color = Color.from_hex(widget.color_var.get())
-                    overrides[key] = Font(font_type, font_size, font_color)
-                    continue
-
-                if isinstance(param_value, Vector):
-                    components = [v.get() for v in widget.vars]
-                    overrides[key] = Vector.from_list(components)
-                    continue
-
-                value = widget.var.get()
-
-                # Convert value to appropriate type
-                if type(param_value) == bool:
-                    overrides[key] = value
-                elif type(param_value) == Path:
-                    overrides[key] = Path(value)
-                elif type(param_value) == Color:
-                    overrides[key] = Color.from_hex(value)
-                elif type(param_value) == datetime:
-                    overrides[key] = datetime.strptime(value, "%Y-%m-%d %H:%M")
-                elif type(param_value) in (list, tuple):
-                    # Parse comma-separated values
-                    items = [item.strip() for item in value.split(",") if item.strip()]
-                    overrides[key] = type(param_value)(items)
-                elif type(param_value) == dict:
-                    # Parse JSON format
-                    import json
-
-                    overrides[key] = json.loads(value)
-                elif type(param_value) == int:
-                    overrides[key] = int(value)
-                elif type(param_value) == float:
-                    overrides[key] = float(value)
-                else:
-                    overrides[key] = value
-
-            # Apply overrides to config manager
-            self.config_manager.apply_overrides(overrides)
-
-            # Save to file
-            self.config_manager.save_to_file(self.config_file)
-
-            self.result = "ok"
+            self.__persist_settings()
             self.dialog.destroy()
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save configuration: {e}")
 
+    def __persist_settings(self):
+        # Update configuration with widget values
+        overrides = {}
+        for key, widget in self.widgets.items():
+            category_name, param_name = key.split("__", 1)
+            category = self.config_manager.get_category(category_name)
+            param_value = getattr(category, param_name).value
+
+            if isinstance(param_value, Font):
+                selected_font_name = widget.font_type_var.get()
+                font_type = selected_font_name
+                font_size = widget.font_size_var.get()
+                font_color = Color.from_hex(widget.color_var.get())
+                overrides[key] = Font(font_type, font_size, font_color)
+                continue
+
+            if isinstance(param_value, Vector):
+                components = [v.get() for v in widget.vars]
+                overrides[key] = Vector.from_list(components)
+                continue
+
+            value = widget.var.get()
+
+            # Convert value to appropriate type
+            if type(param_value) == bool:
+                overrides[key] = value
+            elif type(param_value) == Path:
+                overrides[key] = Path(value)
+            elif type(param_value) == Color:
+                overrides[key] = Color.from_hex(value)
+            elif type(param_value) == datetime:
+                overrides[key] = datetime.strptime(value, "%Y-%m-%d %H:%M")
+            elif type(param_value) in (list, tuple):
+                # Parse comma-separated values
+                items = [item.strip() for item in value.split(",") if item.strip()]
+                overrides[key] = type(param_value)(items)
+            elif type(param_value) == dict:
+                # Parse JSON format
+                import json
+
+                overrides[key] = json.loads(value)
+            elif type(param_value) == int:
+                overrides[key] = int(value)
+            elif type(param_value) == float:
+                overrides[key] = float(value)
+            else:
+                overrides[key] = value
+
+        # Apply overrides to config manager (in-memory)
+        self.config_manager.apply_overrides(overrides)
+
+        # Persist to file
+        self.config_manager.save_to_file(self.config_file)
+
+        self.result = "ok"
+
     def _on_cancel(self):
         """Handle Cancel button click."""
         self.result = "cancel"
         self.dialog.destroy()
+
+    def _on_apply(self):
+        """Apply current settings without closing the dialog.
+
+        This applies the widget values to the in-memory configuration and
+        applies the theme change live if the GUI theme parameter is present.
+        """
+        try:
+            self.__persist_settings()
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save configuration: {e}")

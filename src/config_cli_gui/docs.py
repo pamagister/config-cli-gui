@@ -16,13 +16,15 @@ class DocumentationGenerator:
         def pad(s, width):
             return s + " " * (width - len(s))
 
-        markdown_content = dedent("""
+        markdown_content = dedent(
+            """
             # Configuration Parameters
 
             These parameters are available to configure the behavior of your application.
             The parameters in the cli category can be accessed via the command line interface.
 
-            """).lstrip()
+            """
+        ).lstrip()
 
         for category_name, category in self.config_manager._categories.items():
             markdown_content += f'## Category "{category_name}"\n\n'
@@ -165,13 +167,15 @@ class DocumentationGenerator:
                 continue
             example_value = param.choices[0] if param.choices else param.value
             examples.append(
-                dedent(f"""
+                dedent(
+                    f"""
                 ### {i}. With {param.name} parameter
 
                 ```bash
                 python -m {app_name} --{param.name} {example_value} {required_arg}
                 ```
-                """)
+                """
+                )
             )
 
         markdown = dedent(

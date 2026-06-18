@@ -27,8 +27,8 @@ app:
   # Enable logging to console | type=bool | choices=[True, False]
   enable_console_logging: true
 gui:
-  # GUI theme setting | type=str | choices=['light', 'dark', 'auto']
-  theme: light
+  # GUI theme setting suppoerted by ttkbootstrap | type=str | choices=['cosmo', 'flatly', 'litera', 'minty', 'lumen', 'sandstone', 'yeti', 'pulse', 'united', 'darkly', 'superhero', 'solar', 'cyborg', 'vapor', 'simplex']
+  theme: darkly
   # Default window width | type=int
   window_width: 800
   # Default window height | type=int

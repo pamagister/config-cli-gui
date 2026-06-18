@@ -63,21 +63,25 @@ class ConfigSerializer:
     TYPE_MAPPING = {
         Font: {
             "to_serializable": lambda v: v.to_str(),
-            "from_serializable": lambda v: Font.from_list(v)
-            if isinstance(v, list)
-            else Font.from_str(v),
+            "from_serializable": lambda v: (
+                Font.from_list(v) if isinstance(v, list) else Font.from_str(v)
+            ),
         },
         Color: {
             "to_serializable": lambda v: v.to_hex(),
-            "from_serializable": lambda v: Color.from_list(v)
-            if isinstance(v, list)
-            else (Color.from_hex(v) if isinstance(v, str) else v),
+            "from_serializable": lambda v: (
+                Color.from_list(v)
+                if isinstance(v, list)
+                else (Color.from_hex(v) if isinstance(v, str) else v)
+            ),
         },
         Vector: {
             "to_serializable": lambda v: v.to_str(),
-            "from_serializable": lambda v: Vector.from_list(v)
-            if isinstance(v, list)
-            else (Vector.from_str(v) if isinstance(v, str) else v),
+            "from_serializable": lambda v: (
+                Vector.from_list(v)
+                if isinstance(v, list)
+                else (Vector.from_str(v) if isinstance(v, str) else v)
+            ),
         },
         Path: {
             "to_serializable": lambda v: str(v.as_posix()),
@@ -85,7 +89,7 @@ class ConfigSerializer:
         },
         datetime: {
             "to_serializable": lambda v: v.isoformat(),
-            "from_serializable": lambda v: datetime.fromisoformat(v) if isinstance(v, str) else v,
+            "from_serializable": lambda v: (datetime.fromisoformat(v) if isinstance(v, str) else v),
         },
     }
 
