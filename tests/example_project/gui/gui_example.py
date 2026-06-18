@@ -15,7 +15,7 @@ import traceback
 import webbrowser
 from functools import partial
 from pathlib import Path
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, font, messagebox, ttk
 
 from config_cli_gui.gui import SettingsDialogGenerator
 from config_cli_gui.logging import (
@@ -526,7 +526,18 @@ class MainGui:
 
 def main():
     """Main entry point for the GUI application."""
+
     root = tk.Tk()
+
+    root.tk.call("tk", "scaling", 1.25)
+
+    font.nametofont("TkDefaultFont").configure(size=11)
+    font.nametofont("TkTextFont").configure(size=11)
+    font.nametofont("TkMenuFont").configure(size=11)
+    font.nametofont("TkHeadingFont").configure(size=11)
+
+    style = ttk.Style()
+    style.theme_use("clam")
     try:
         MainGui(root)
         root.mainloop()
