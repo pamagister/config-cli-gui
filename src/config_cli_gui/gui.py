@@ -155,8 +155,12 @@ class CalendarDialog:
         button_frame = ttk.Frame(main_frame)
         button_frame.pack(fill=tk.X, pady=(10, 0))
 
-        ttk.Button(button_frame, text="OK", command=self._on_ok).pack(side=tk.RIGHT, padx=(5, 0))
-        ttk.Button(button_frame, text="Cancel", command=self._on_cancel).pack(side=tk.RIGHT)
+        ttk.Button(button_frame, text="OK", command=self._on_ok, width=10).pack(
+            side=tk.RIGHT, padx=(5, 0)
+        )
+        ttk.Button(button_frame, text="Cancel", command=self._on_cancel, width=10).pack(
+            side=tk.RIGHT
+        )
 
     def _update_calendar(self):
         """Update day spinbox based on selected month/year."""
@@ -252,11 +256,15 @@ class GenericSettingsDialog:
         button_frame.pack(fill=tk.X, pady=(10, 0))
 
         # Apply: apply current settings (in-memory) but keep dialog open
-        ttk.Button(button_frame, text="Apply", command=self._on_apply).pack(
+        ttk.Button(button_frame, text="Apply", command=self._on_apply, width=10).pack(
             side=tk.RIGHT, padx=(5, 0)
         )
-        ttk.Button(button_frame, text="OK", command=self._on_ok).pack(side=tk.RIGHT, padx=(5, 0))
-        ttk.Button(button_frame, text="Cancel", command=self._on_cancel).pack(side=tk.RIGHT)
+        ttk.Button(button_frame, text="OK", command=self._on_ok, width=10).pack(
+            side=tk.RIGHT, padx=(5, 0)
+        )
+        ttk.Button(button_frame, text="Cancel", command=self._on_cancel, width=10).pack(
+            side=tk.RIGHT
+        )
 
     def _create_category_tab(self, category_name: str, category):
         """Create a tab for a configuration category."""
@@ -297,13 +305,13 @@ class GenericSettingsDialog:
                 continue
             """
 
-            # Create label
-            label = ttk.Label(parent, text=f"{param.name}:")
-            label.grid(row=row, column=0, sticky="w", padx=5, pady=2)
+            # Create label (fixed width for alignment)
+            label = ttk.Label(parent, text=f"{param.name}:", width=28, anchor="w")
+            label.grid(row=row, column=0, sticky="w", padx=5, pady=4)
 
             # Create appropriate widget based on parameter type
             widget = self._create_parameter_widget(parent, param)
-            widget.grid(row=row, column=1, sticky="ew", padx=5, pady=2)
+            widget.grid(row=row, column=1, sticky="ew", padx=5, pady=4)
 
             # Add tooltip
             ToolTip(label, param.help)
@@ -407,10 +415,10 @@ class GenericSettingsDialog:
             if path:
                 var.set(path)
 
-        browse_btn = ttk.Button(frame, text="File", command=browse_file)
+        browse_btn = ttk.Button(frame, text="File", command=browse_file, width=10)
         browse_btn.pack(side=tk.RIGHT, padx=(5, 0))
 
-        browse_btn = ttk.Button(frame, text="Directory", command=browse_dir)
+        browse_btn = ttk.Button(frame, text="Directory", command=browse_dir, width=10)
         browse_btn.pack(side=tk.RIGHT, padx=(5, 0))
 
         frame.var = var
@@ -436,7 +444,7 @@ class GenericSettingsDialog:
                 var.set(color[1])
                 color_display.config(bg=color[1])
 
-        pick_btn = ttk.Button(frame, text="Pick", command=pick_color)
+        pick_btn = ttk.Button(frame, text="Pick", command=pick_color, width=10)
         pick_btn.pack(side=tk.LEFT, padx=(5, 0))
         color_display.config(bg=color_value.to_hex())
 
@@ -485,7 +493,7 @@ class GenericSettingsDialog:
                 color_var.set(color[1])
                 color_display.config(bg=color[1])
 
-        pick_btn = ttk.Button(frame, text="Pick Color", command=pick_color)
+        pick_btn = ttk.Button(frame, text="Pick Color", command=pick_color, width=10)
         pick_btn.pack(side=tk.LEFT, padx=(5, 0))
 
         def on_color_change(*args):
@@ -531,7 +539,7 @@ class GenericSettingsDialog:
             img_label.image = photo
             img_label.pack()
 
-        preview_btn = ttk.Button(frame, text="Preview", command=show_preview)
+        preview_btn = ttk.Button(frame, text="Preview", command=show_preview, width=10)
         preview_btn.pack(side=tk.LEFT, padx=(5, 0))
 
         # Store variables in the frame for later access
@@ -584,7 +592,7 @@ class GenericSettingsDialog:
             if dialog.result:
                 var.set(dialog.result.strftime("%Y-%m-%d %H:%M"))
 
-        cal_btn = ttk.Button(frame, text="Calendar", command=pick_datetime)
+        cal_btn = ttk.Button(frame, text="Calendar", command=pick_datetime, width=10)
         cal_btn.pack(side=tk.RIGHT, padx=(5, 0))
 
         frame.var = var
