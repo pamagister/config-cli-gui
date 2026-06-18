@@ -128,6 +128,16 @@ class MainGui:
             enable_console_logging=self._config.app.enable_console_logging.value,
         )
         self.logger = get_logger("gui.main")
+        # Inform about which configuration file was last used (if any)
+        try:
+            last_cfg = self._config.get_last_used_config()
+            if last_cfg:
+                self.logger.info(f"Configuration loaded: {last_cfg}")
+            else:
+                self.logger.info("No configuration file loaded (using defaults)")
+        except Exception:
+            # Do not fail GUI startup if logging or config introspection fails
+            self.logger.debug("Could not determine last used configuration file")
 
         # File lists
         self.input_files = []
@@ -295,8 +305,17 @@ class MainGui:
         # Create GUI log writer
         self.gui_log_writer = GuiLogWriter(self.log_text)
 
-        # Connect to logging system
-        connect_gui_logging(self.gui_log_writer)
+        # Connect to logging system - support object with write() method
+        try:
+            self.logger.debug("Connecting GUI log writer to logging system")
+            connect_gui_logging(self.gui_log_writer)
+            self.logger.info("GUI logging connected")
+        except Exception as e:
+            # Keep the GUI running even if connecting GUI logging fails
+            try:
+                self.logger.error(f"Failed to connect GUI logging: {e}")
+            except Exception:
+                pass
 
     def _on_log_level_changed(self, event=None):
         """Handle log level change."""

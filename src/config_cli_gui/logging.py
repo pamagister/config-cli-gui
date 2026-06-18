@@ -96,9 +96,9 @@ class LoggerManager:
         self.enable_console_logging = bool(enable_console_logging)
 
         self.logger = logging.getLogger("config_cli_gui")
-        self.gui_handler: GuiLogHandler | None = None
+        self.gui_handler: logging.Handler | None = None
         self.file_handler: logging.handlers.RotatingFileHandler | None = None
-        self.console_handler: logging.StreamHandler | None = None
+        self.console_handler: logging.Handler | None = None
 
         self._setup_logging()
 
@@ -208,7 +208,7 @@ def initialize_logging(
     enable_console_logging: bool | None = None,
     log_dir: Path | None = None,
     log_file_name: str | None = None,
-) -> LoggerManager:
+) -> LoggerManager | None:
     """
     Initialize the global logging system.
 
@@ -281,7 +281,16 @@ def connect_gui_logging(writer: Callable[[str], None]) -> None:
         writer: A GUI writer object with a write() method.
     """
     manager = get_logger_manager()
-    manager.connect_gui_writer(writer)
+    # Support both a callable writer (e.g. a function) and objects that expose
+    # a .write(text) method (common for file-like or GUI writer objects).
+    if hasattr(writer, "write") and callable(getattr(writer, "write")):
+        manager.connect_gui_writer(getattr(writer, "write"))
+    elif callable(writer):
+        manager.connect_gui_writer(writer)
+    else:
+        raise TypeError(
+            "connect_gui_logging requires a callable or an object with a .write(text) method"
+        )
 
 
 def disconnect_gui_logging() -> None:

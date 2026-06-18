@@ -10,7 +10,7 @@ app:
   # Enable logging to console | type=bool | choices=[True, False]
   enable_console_logging: true
   # GUI theme setting supported by ttkbootstrap | type=str | choices=['cosmo', 'flatly', 'litera', 'minty', 'lumen', 'sandstone', 'yeti', 'pulse', 'united', 'darkly', 'superhero', 'solar', 'cyborg', 'vapor', 'simplex']
-  theme: darkly
+  theme: superhero
 cli:
   # Path to input (file or folder) | type=str | [CLI]
   input: ''
@@ -34,21 +34,21 @@ gui:
   # Maximum number of log lines to keep in GUI | type=int
   max_log_lines: 1000
   # Point in 2D space | type=Vector
-  point2D: (7, 11)
+  point2D: (7.0, 11.0)
   # Point in 3D space | type=Vector
   point3D: (1.2, 3.4, 5.6)
 misc:
   # Example integer | type=int
   some_numeric: 42
   # Example vector 2D | type=Vector
-  some_vector2d: (1, 2)
+  some_vector2d: (1.0, 2.0)
   # Example vector 3D | type=Vector
   some_vector3d: (1.1, 2.2, 3.3)
-  # Path to the file to use | type=PosixPath
+  # Path to the file to use | type=str
   some_file: some_file.txt
   # Color setting for the application | type=Color
   some_color: '#ff0000'
   # Date setting for the application | type=datetime
-  some_date: '2025-12-31T10:30:45'
+  some_date: '2025-12-31T10:30:00'
   # Font setting for the application | type=Font
-  some_font: 'DejaVuSans.ttf, 12, #0000ff'
+  some_font: 'DejaVuSans.ttf, 12.0, #0000ff'

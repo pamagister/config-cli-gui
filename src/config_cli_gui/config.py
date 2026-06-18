@@ -1,4 +1,5 @@
 import json
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -245,6 +246,11 @@ class ConfigManager:
         except Exception:
             # Persistence should not break normal config loading.
             pass
+        try:
+            logging.getLogger("config_cli_gui").info(f"Loaded configuration from: {path}")
+        except Exception:
+            # Non-fatal: logging may not be configured yet.
+            pass
 
     def _apply_config_data(self, data: dict[str, Any]) -> None:
         """Apply loaded data to the configuration parameters."""
@@ -288,6 +294,11 @@ class ConfigManager:
             persistence.write_last_used_config("config-cli-gui", str(path))
         except Exception:
             # Ignore persistence failures when saving
+            pass
+        try:
+            logging.getLogger("config_cli_gui").info(f"Saved configuration to: {path}")
+        except Exception:
+            # Non-fatal: logging may not be configured yet.
             pass
 
     def get_last_used_config(self) -> str | None:
