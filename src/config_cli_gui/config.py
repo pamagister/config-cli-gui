@@ -9,6 +9,7 @@ from typing import Any
 import yaml
 from pydantic import BaseModel
 
+from config_cli_gui import persistence
 from config_cli_gui.configtypes.color import Color
 from config_cli_gui.configtypes.font import Font
 from config_cli_gui.configtypes.vector import Vector
@@ -167,6 +168,13 @@ class ConfigManager:
             data = yaml.safe_load(f) if path.suffix.lower() in [".yml", ".yaml"] else json.load(f)
 
         self._apply_config_data(data)
+        # Persist the information about the last used configuration file so the
+        # application can restore the same config on next start.
+        try:
+            persistence.write_last_used_config("config-cli-gui", str(path))
+        except Exception:
+            # Persistence should not break normal config loading.
+            pass
 
     def _apply_config_data(self, data: dict[str, Any]) -> None:
         """Apply loaded data to the configuration parameters."""
@@ -204,6 +212,23 @@ class ConfigManager:
 
         if file_format == "yaml":
             self._append_comments_to_yaml(path)
+
+        # Record the saved config as the last-used config as well.
+        try:
+            persistence.write_last_used_config("config-cli-gui", str(path))
+        except Exception:
+            # Ignore persistence failures when saving
+            pass
+
+    def get_last_used_config(self) -> str | None:
+        """Return the last used config file path recorded by the persistence layer.
+
+        This is a convenience wrapper around persistence.read_last_used_config.
+        """
+        try:
+            return persistence.read_last_used_config("config-cli-gui")
+        except Exception:
+            return None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert all configuration categories to a dictionary."""

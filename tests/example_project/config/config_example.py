@@ -90,23 +90,11 @@ class AppConfig(ConfigCategory):
         help="Maximum log file size in MB before rotation",
     )
 
-    log_backup_count: ConfigParameter = ConfigParameter(
-        name="log_backup_count",
-        value=5,
-        help="Number of backup log files to keep",
-    )
-
     log_format: ConfigParameter = ConfigParameter(
         name="log_format",
         value="detailed",
         choices=["simple", "detailed", "json"],
         help="Log message format style",
-    )
-
-    max_workers: ConfigParameter = ConfigParameter(
-        name="max_workers",
-        value=4,
-        help="Maximum number of worker threads",
     )
 
     enable_file_logging: ConfigParameter = ConfigParameter(
@@ -120,13 +108,6 @@ class AppConfig(ConfigCategory):
         value=True,
         help="Enable logging to console",
     )
-
-
-class GuiConfig(ConfigCategory):
-    """GUI-specific configuration parameters."""
-
-    def get_category_name(self) -> str:
-        return "gui"
 
     # ttkbootstrap.Style().theme_names()
     theme: ConfigParameter = ConfigParameter(
@@ -151,6 +132,13 @@ class GuiConfig(ConfigCategory):
         ],
         help="GUI theme setting suppoerted by ttkbootstrap",
     )
+
+
+class GuiConfig(ConfigCategory):
+    """GUI-specific configuration parameters."""
+
+    def get_category_name(self) -> str:
+        return "gui"
 
     window_width: ConfigParameter = ConfigParameter(
         name="window_width",

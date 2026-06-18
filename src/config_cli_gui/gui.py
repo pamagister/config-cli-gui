@@ -710,7 +710,26 @@ class GenericSettingsDialog:
         applies the theme change live if the GUI theme parameter is present.
         """
         try:
+            # Remember current theme to detect changes
+            try:
+                old_theme = self.config_manager.gui.theme.value
+            except Exception:
+                old_theme = None
+
             self.__persist_settings()
+
+            # If the GUI theme changed, try to apply it live.
+            try:
+                new_theme = self.config_manager.gui.theme.value
+                if new_theme and new_theme != old_theme:
+                    try:
+                        # ttkbootstrap supports theme switching via Style.theme_use
+                        ttkbootstrap.Style().theme_use(new_theme)
+                    except Exception:
+                        # Best-effort: do not raise; if it fails, user can restart app
+                        pass
+            except Exception:
+                pass
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save configuration: {e}")

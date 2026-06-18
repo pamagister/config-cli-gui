@@ -26,6 +26,7 @@ from config_cli_gui.logging import (
     get_logger,
     initialize_logging,
 )
+from config_cli_gui.persistence import read_last_used_config
 from tests.example_project.config.config_example import ProjectConfigManager
 from tests.example_project.core.base import BaseGPXProcessor
 
@@ -531,7 +532,14 @@ def main():
 
     # Determine theme from configuration (fall back to sandstone on error)
 
-    _config = ProjectConfigManager("config.yaml")
+    # Try to restore the last used configuration file so the GUI can start
+    # with the user's preferred theme and settings.
+    last = read_last_used_config("config-cli-gui")
+    if last and Path(last).exists():
+        _config = ProjectConfigManager(last)
+    else:
+        _config = ProjectConfigManager()
+
     theme_choice = _config.gui.theme.value
 
     root: ttkbootstrap.Window = ttkbootstrap.Window(themename=theme_choice)
