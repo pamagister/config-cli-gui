@@ -4,6 +4,25 @@ Changelog
 
 (unreleased)
 ------------
+- Improve gui. [Paul Magister]
+- Fix gui log issue: even better fix. [Paul Magister]
+- Fix gui log issue: [Paul Magister]
+
+  Previously the logger handler attempted to call the passed object like a function; GuiLogWriter provides write(), not a call. Because emit() swallowed exceptions, you saw nothing in the GUI log.
+  Now connect_gui_logging detects objects with .write() and registers the writer.write callable with the UI handler. GuiLogHandler.emit calls that callable, which writes to the text widget and the text appears.
+- Improve config consistency: correctly consider logging parameters.
+  [Paul Magister]
+- Improve config usage consistency: allways load last config. Move
+  AppConfig into config.py since it is used in the core lib component.
+  [Paul Magister]
+- Save last opened config to start there on the next session, move theme
+  to app category. [Paul Magister]
+- Do not run tests on macos. [Paul Magister]
+
+
+0.3.4 (2026-06-18)
+------------------
+- Docs: Update HISTORY.md for release 0.3.4. [Paul Magister]
 - Bugfix: init color display properly. [Paul Magister]
 - Use ttkbootstrap gui styles. [Paul Magister]
 - Improve GUI scaling and font sizes. [Paul Magister]
