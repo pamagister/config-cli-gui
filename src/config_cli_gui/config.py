@@ -177,6 +177,13 @@ class AppConfig(ConfigCategory):
         help="GUI theme setting supported by ttkbootstrap",
     )
 
+    # Application identifier used for small persistence (store dir, last-used file)
+    app_name: ConfigParameter = ConfigParameter(
+        name="app_name",
+        value="config-cli-gui",
+        help="Application identifier used for storing small app data (persistence)",
+    )
+
 
 class ConfigManager:
     """Manages loading, saving, and accessing configuration categories."""
@@ -190,6 +197,9 @@ class ConfigManager:
         self._categories: dict[str, ConfigCategory] = {}
         self._serializer = ConfigSerializer()
         self.app: AppConfig = AppConfig()
+        # provide a default hook for application name retrieval; projects may
+        # override `get_app_name` on their concrete ConfigManager subclass.
+        # By default this returns the `app_name` value from the AppConfig.
 
         categories = (self.app, *categories)
         for category in categories:
@@ -201,6 +211,20 @@ class ConfigManager:
             self.load_from_file(config_file)
 
         self.apply_overrides(overrides)
+
+    def get_app_name(self) -> str:
+        """Return the application identifier used by persistence helpers.
+
+        Projects can override this method in their concrete ConfigManager to
+        provide a different name (e.g. tests/example_project returns
+        "example-app"). The default implementation reads the
+        `app_name` parameter from the centralized AppConfig.
+        """
+        try:
+            # app_name is a ConfigParameter on AppConfig
+            return str(self.app.app_name.value)
+        except Exception:
+            return "config-cli-gui"
 
     def add_category(self, name: str, category: ConfigCategory) -> None:
         """Register a new configuration category."""
@@ -242,7 +266,7 @@ class ConfigManager:
         # Persist the information about the last used configuration file so the
         # application can restore the same config on next start.
         try:
-            persistence.write_last_used_config("config-cli-gui", str(path))
+            persistence.write_last_used_config(self.get_app_name(), str(path))
         except Exception:
             # Persistence should not break normal config loading.
             pass
@@ -291,7 +315,7 @@ class ConfigManager:
 
         # Record the saved config as the last-used config as well.
         try:
-            persistence.write_last_used_config("config-cli-gui", str(path))
+            persistence.write_last_used_config(self.get_app_name(), str(path))
         except Exception:
             # Ignore persistence failures when saving
             pass
@@ -307,7 +331,7 @@ class ConfigManager:
         This is a convenience wrapper around persistence.read_last_used_config.
         """
         try:
-            return persistence.read_last_used_config("config-cli-gui")
+            return persistence.read_last_used_config(self.get_app_name())
         except Exception:
             return None
 

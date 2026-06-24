@@ -558,7 +558,7 @@ def main():
 
     # Try to restore the last used configuration file so the GUI can start
     # with the user's preferred theme and settings.
-    last = read_last_used_config("config-cli-gui")
+    last = read_last_used_config("example-app")
     if last and Path(last).exists():
         _config = ProjectConfigManager(last)
     else:

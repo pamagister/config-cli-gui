@@ -176,6 +176,14 @@ class ProjectConfigManager(ConfigManager):  # Inherit from ConfigManager
         categories = (CliConfig(), GuiConfig(), MiscConfig())
         super().__init__(categories, config_file, **kwargs)
 
+    def get_app_name(self) -> str:
+        """Return the application identifier for this example project.
+
+        This overrides the library default so that example files use
+        "example-app" as their persistence directory/name.
+        """
+        return "example-app"
+
 
 def main():
     """Main function to generate config file and documentation."""
