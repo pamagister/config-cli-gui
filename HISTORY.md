@@ -4,6 +4,13 @@ Changelog
 
 (unreleased)
 ------------
+- Dynamically set app name for config persistence. [Paul Magister]
+- Dynamically set app name for config persistence. [Paul Magister]
+
+
+0.3.5 (2026-06-18)
+------------------
+- Docs: Update HISTORY.md for release 0.3.5. [Paul Magister]
 - Improve gui. [Paul Magister]
 - Fix gui log issue: even better fix. [Paul Magister]
 - Fix gui log issue: [Paul Magister]
