@@ -4,6 +4,12 @@ Changelog
 
 (unreleased)
 ------------
+- Keep last used config file. [Paul Magister]
+
+
+0.3.6 (2026-06-24)
+------------------
+- Docs: Update HISTORY.md for release 0.3.6. [Paul Magister]
 - Dynamically set app name for config persistence. [Paul Magister]
 - Dynamically set app name for config persistence. [Paul Magister]
 
