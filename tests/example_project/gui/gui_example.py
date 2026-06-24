@@ -118,7 +118,21 @@ class MainGui:
         self.root.geometry("1200x600")  # Increased width for new layout
 
         # Initialize configuration
-        self._config = ConfigParameterManager("config.yaml")
+        # Prefer the user's last used configuration if present; otherwise
+        # load a local default config.yaml without marking it as "last used"
+        # (so we don't overwrite the user's actual last-used file).
+        try:
+            last = read_last_used_config(ConfigParameterManager.get_app_name())
+        except Exception:
+            last = None
+
+        if last and Path(last).exists():
+            self._config = ConfigParameterManager(last)
+        elif Path("config.yaml").exists():
+            # Load default config but do not persist it as the "last used"
+            self._config = ConfigParameterManager("config.yaml", persist_last_used=False)
+        else:
+            self._config = ConfigParameterManager()
 
         # Initialize logging system using individual AppConfig values
         self.logger_manager = initialize_logging(
@@ -392,6 +406,8 @@ class MainGui:
 
         self.logger.info(f"Loading new configuration from: {config_file}")
         try:
+            # When user explicitly selects a config file, we load it and
+            # allow the manager to persist it as the new last-used file.
             self._config = ConfigParameterManager(config_file)
         except Exception as e:
             self.logger.error(f"Failed to load config file: {e}", exc_info=True)
@@ -576,7 +592,7 @@ def main():
 
     # Try to restore the last used configuration file so the GUI can start
     # with the user's preferred theme and settings.
-    last = read_last_used_config("example-app")
+    last = read_last_used_config(ConfigParameterManager.get_app_name())
     if last and Path(last).exists():
         _config = ConfigParameterManager(last)
     else:

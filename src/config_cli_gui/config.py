@@ -185,6 +185,7 @@ class ConfigManager:
         self,
         categories: tuple[ConfigCategory, ...],
         config_file: str | None = None,
+        persist_last_used: bool = True,
         **overrides: Any,
     ):
         self._categories: dict[str, ConfigCategory] = {}
@@ -200,11 +201,16 @@ class ConfigManager:
             self.add_category(category.get_category_name(), category)
 
         if config_file:
-            self.load_from_file(config_file)
+            # Allow callers to opt-out of writing the "last used" persistence
+            # entry when loading a configuration during initialization. This
+            # is useful for GUIs or libraries that want to load a default
+            # config without marking it as the user's last-used file.
+            self.load_from_file(config_file, persist_last_used=persist_last_used)
 
         self.apply_overrides(overrides)
 
-    def get_app_name(self) -> str:
+    @staticmethod
+    def get_app_name() -> str:
         """Return the application identifier used by persistence helpers.
 
         Projects can override this method in their concrete ConfigManager to
@@ -239,7 +245,7 @@ class ConfigManager:
                 else:
                     setattr(category, param_name, value)
 
-    def load_from_file(self, config_file: str) -> None:
+    def load_from_file(self, config_file: str, persist_last_used: bool = True) -> None:
         """Load configuration from a YAML or JSON file."""
         path = Path(config_file)
         if not path.exists():
@@ -250,12 +256,15 @@ class ConfigManager:
 
         self._apply_config_data(data)
         # Persist the information about the last used configuration file so the
-        # application can restore the same config on next start.
-        try:
-            persistence.write_last_used_config(self.get_app_name(), str(path))
-        except Exception:
-            # Persistence should not break normal config loading.
-            pass
+        # application can restore the same config on next start. This can be
+        # disabled by callers (e.g. GUI startup loading a default file) by
+        # passing `persist_last_used=False`.
+        if persist_last_used:
+            try:
+                persistence.write_last_used_config(self.get_app_name(), str(path))
+            except Exception:
+                # Persistence should not break normal config loading.
+                pass
         try:
             logging.getLogger("config_cli_gui").info(f"Loaded configuration from: {path}")
         except Exception:
