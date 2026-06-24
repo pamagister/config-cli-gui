@@ -4,7 +4,7 @@ from unittest.mock import mock_open, patch
 import pytest
 
 from config_cli_gui.cli import CliGenerator
-from tests.example_project.config.config_example import ProjectConfigManager
+from tests.example_project.config.config_example import ConfigParameterManager
 
 # ----------------------------------------------------------------------
 # Mock config.yaml content
@@ -29,7 +29,7 @@ cli:
 # ----------------------------------------------------------------------
 @pytest.fixture
 def config_manager():
-    return ProjectConfigManager()
+    return ConfigParameterManager()
 
 
 @pytest.fixture

@@ -177,13 +177,6 @@ class AppConfig(ConfigCategory):
         help="GUI theme setting supported by ttkbootstrap",
     )
 
-    # Application identifier used for small persistence (store dir, last-used file)
-    app_name: ConfigParameter = ConfigParameter(
-        name="app_name",
-        value="config-cli-gui",
-        help="Application identifier used for storing small app data (persistence)",
-    )
-
 
 class ConfigManager:
     """Manages loading, saving, and accessing configuration categories."""
@@ -199,7 +192,6 @@ class ConfigManager:
         self.app: AppConfig = AppConfig()
         # provide a default hook for application name retrieval; projects may
         # override `get_app_name` on their concrete ConfigManager subclass.
-        # By default this returns the `app_name` value from the AppConfig.
 
         categories = (self.app, *categories)
         for category in categories:
@@ -216,15 +208,9 @@ class ConfigManager:
         """Return the application identifier used by persistence helpers.
 
         Projects can override this method in their concrete ConfigManager to
-        provide a different name (e.g. tests/example_project returns
-        "example-app"). The default implementation reads the
-        `app_name` parameter from the centralized AppConfig.
+        provide a different name "my-app-name"
         """
-        try:
-            # app_name is a ConfigParameter on AppConfig
-            return str(self.app.app_name.value)
-        except Exception:
-            return "config-cli-gui"
+        return "config-cli-gui"
 
     def add_category(self, name: str, category: ConfigCategory) -> None:
         """Register a new configuration category."""

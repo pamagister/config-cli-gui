@@ -164,7 +164,7 @@ class MiscConfig(ConfigCategory):
     )
 
 
-class ProjectConfigManager(ConfigManager):  # Inherit from ConfigManager
+class ConfigParameterManager(ConfigManager):  # Inherit from ConfigManager
     """Main configuration manager that handles all parameter categories."""
 
     cli: CliConfig
@@ -190,7 +190,7 @@ def main():
     default_config: str = "config.yaml"
     default_cli_doc: str = "docs/usage/cli.md"
     default_config_doc: str = "docs/usage/config.md"
-    _config = ProjectConfigManager()
+    _config = ConfigParameterManager()
     doc_gen = DocumentationGenerator(_config)
     doc_gen.generate_default_config_file(output_file=default_config)
     print(f"Generated: {default_config}")

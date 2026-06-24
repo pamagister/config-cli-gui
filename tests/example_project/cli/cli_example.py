@@ -7,11 +7,11 @@ from logging import Logger
 
 from config_cli_gui.cli import CliGenerator
 from config_cli_gui.logging import initialize_logging
-from tests.example_project.config.config_example import ProjectConfigManager
+from tests.example_project.config.config_example import ConfigParameterManager
 from tests.example_project.core.base import BaseGPXProcessor
 
 
-def validate_config(config_manager: ProjectConfigManager, logger: Logger) -> bool:
+def validate_config(config_manager: ConfigParameterManager, logger: Logger) -> bool:
     """Validate the configuration parameters.
 
     Args:
@@ -29,7 +29,7 @@ def validate_config(config_manager: ProjectConfigManager, logger: Logger) -> boo
     return True
 
 
-def run_main_processing(_config: ProjectConfigManager, logger: Logger) -> int:
+def run_main_processing(_config: ConfigParameterManager, logger: Logger) -> int:
     """Main processing function that gets called by the CLI generator.
 
     Args:
@@ -71,7 +71,7 @@ def run_main_processing(_config: ProjectConfigManager, logger: Logger) -> int:
 def main():
     """Main entry point for the CLI application."""
     # Create the base configuration manager
-    config_manager = ProjectConfigManager()
+    config_manager = ConfigParameterManager()
 
     # Initialize logging and get a logger
     logger_manager = initialize_logging(

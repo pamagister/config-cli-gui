@@ -27,7 +27,7 @@ from config_cli_gui.logging import (
     initialize_logging,
 )
 from config_cli_gui.persistence import read_last_used_config
-from tests.example_project.config.config_example import ProjectConfigManager
+from tests.example_project.config.config_example import ConfigParameterManager
 from tests.example_project.core.base import BaseGPXProcessor
 
 
@@ -118,7 +118,7 @@ class MainGui:
         self.root.geometry("1200x600")  # Increased width for new layout
 
         # Initialize configuration
-        self._config = ProjectConfigManager("config.yaml")
+        self._config = ConfigParameterManager("config.yaml")
 
         # Initialize logging system using individual AppConfig values
         self.logger_manager = initialize_logging(
@@ -278,7 +278,8 @@ class MainGui:
         # File menu
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Open...", command=self._open_files)
+        file_menu.add_command(label="Select config file", command=self._select_config)
+        file_menu.add_command(label="Open gpx files...", command=self._open_files)
         file_menu.add_separator()
 
         # Create Run menu options dynamically
@@ -378,6 +379,23 @@ class MainGui:
         except Exception as e:
             self.logger.error(f"Could not open file {file_path}: {e}")
             messagebox.showerror("Error", f"Could not open file {file_path}: {e}")
+
+    def _select_config(self):
+        """Open file dialog to select and load a new config file."""
+        config_file = filedialog.askopenfilename(
+            title="Select config file",
+            filetypes=[("YAML files", "*.yaml"), ("All files", "*.*")],
+        )
+        if not config_file:
+            self.logger.debug("No config file selected.")
+            return
+
+        self.logger.info(f"Loading new configuration from: {config_file}")
+        try:
+            self._config = ConfigParameterManager(config_file)
+        except Exception as e:
+            self.logger.error(f"Failed to load config file: {e}", exc_info=True)
+            messagebox.showerror("Config Error", f"Failed to load configuration: {e}")
 
     def _open_files(self):
         """Open file dialog and add files to list."""
@@ -560,9 +578,9 @@ def main():
     # with the user's preferred theme and settings.
     last = read_last_used_config("example-app")
     if last and Path(last).exists():
-        _config = ProjectConfigManager(last)
+        _config = ConfigParameterManager(last)
     else:
-        _config = ProjectConfigManager()
+        _config = ConfigParameterManager()
 
     theme_choice = _config.app.theme.value
 
