@@ -4,6 +4,13 @@ Changelog
 
 (unreleased)
 ------------
+- Improved cli doc generation: link to config.yaml. [Paul Magister]
+- Improved cli doc generation: no more python -m. [Paul Magister]
+
+
+0.3.8 (2026-10-02)
+------------------
+- Docs: Update HISTORY.md for release 0.3.8. [Paul Magister]
 - Bump python version to <3.14. [Paul Magister]
 
 
