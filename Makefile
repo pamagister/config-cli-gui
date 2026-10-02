@@ -50,7 +50,7 @@ lint:             ## Run pep8, black, mypy linters.
 #	uv run mypy --ignore-missing-imports src/
 
 .PHONY: test
-test: lint        ## Run tests and generate coverage report.
+test: lint example-files  ## Run tests and generate coverage report.
 	uv run pytest -v --cov-config .coveragerc --cov=src -l --tb=short --maxfail=1 tests/
 	uv run coverage xml
 	uv run coverage html
@@ -115,7 +115,7 @@ release:          ## Create a new tag for release.
 	echo "Add modified files to commit and push them to main"
 
 .PHONY: docs
-docs:             ## Build and sync the documentation.
+docs: example-files ## Build and sync the documentation.
 	@echo "sync documentation ..."
 	@uv run ./scripts/update_readme.py
 	@uv run ./.github/update_funding.py
@@ -138,3 +138,8 @@ pytree:            ## Show project tree (excluding ignored folders)
 .PHONY: init
 init:             ## Initialize the project based on an application template.
 	@./.github/init.sh
+
+.PHONY: example-files
+example-files:      ## Regenerate config.yaml and docs from tests/example_project.
+	@echo "Generating example config and docs from tests/example_project..."
+	@uv run python tests/example_project/config/config_example.py

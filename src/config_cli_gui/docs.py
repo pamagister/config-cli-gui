@@ -10,12 +10,28 @@ class DocumentationGenerator:
     def __init__(self, config_manager: ConfigManager):
         self.config_manager = config_manager
 
-    def generate_config_markdown_doc(self, output_file: str):
-        """Generate Markdown documentation for all configuration parameters."""
+    def generate_config_markdown_doc(
+        self,
+        output_file: str,
+        config_file_path: str | None = "../../config.yaml",
+        link_strategy: str = "relative",
+    ):
+        """Generate Markdown documentation for all configuration parameters.
+
+        Args:
+            output_file: Path where the markdown file will be written
+            config_file_path: Path to the config.yaml file (for creating links)
+                             Can be relative (e.g., "../../config.yaml") or absolute
+            link_strategy: How to generate links to config.yaml:
+                          - "relative": relative path (default, for documentation)
+                          - "file": file:// URI (for file explorer/installed app)
+                          - "none": no links (default if config_file_path is None)
+        """
 
         def pad(s, width):
             return s + " " * (width - len(s))
 
+        # Create introduction with link to config file if provided
         markdown_content = dedent("""
             # Configuration Parameters
 
@@ -24,8 +40,34 @@ class DocumentationGenerator:
 
             """).lstrip()
 
+        # Add config file link if provided
+        if config_file_path:
+            if link_strategy == "file":
+                # Convert to absolute path for file:// URI
+                from pathlib import Path as PathlibPath
+
+                abs_path = PathlibPath(config_file_path).resolve()
+                link = f"file://{abs_path.as_posix()}"
+            else:
+                # Use relative path (default)
+                link = config_file_path
+
+            markdown_content += dedent(f"""
+                ## Configuration File Reference
+
+                The actual configuration is stored in [`config.yaml`]({link}). You can:
+
+                - Edit the configuration file directly using your text editor
+                - Use the `--config` command-line option to specify a custom config file
+                - Place a `config.yaml` in your application's config
+                  directory (typically `~/.config/config-cli-gui/`)
+
+                """).lstrip()
+
         for category_name, category in self.config_manager._categories.items():
-            markdown_content += f'## Category "{category_name}"\n\n'
+            # Create anchor-friendly category name
+            category_anchor = category_name.lower().replace(" ", "-")
+            markdown_content += f'## Category "{category_name}" {{#{category_anchor}}}\n\n'
 
             # Collect all parameters for this category
             rows = []

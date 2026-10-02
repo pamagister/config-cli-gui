@@ -196,7 +196,12 @@ def main():
     doc_gen.generate_default_config_file(output_file=default_config)
     print(f"Generated: {default_config}")
 
-    doc_gen.generate_config_markdown_doc(output_file=default_config_doc)
+    # Generate config markdown with link to config.yaml
+    doc_gen.generate_config_markdown_doc(
+        output_file=default_config_doc,
+        config_file_path="../../config.yaml",
+        link_strategy="relative",
+    )
     print(f"Generated: {default_config_doc}")
 
     doc_gen.generate_cli_markdown_doc(output_file=default_cli_doc)
