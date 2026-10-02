@@ -4,6 +4,12 @@ Changelog
 
 (unreleased)
 ------------
+- Bump python version to <3.14. [Paul Magister]
+
+
+0.3.7 (2026-06-24)
+------------------
+- Docs: Update HISTORY.md for release 0.3.7. [Paul Magister]
 - Keep last used config file. [Paul Magister]
 
 
