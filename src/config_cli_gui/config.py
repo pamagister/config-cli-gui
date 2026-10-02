@@ -91,7 +91,7 @@ class ConfigSerializer:
         },
         datetime: {
             "to_serializable": lambda v: v.isoformat(),
-            "from_serializable": lambda v: (datetime.fromisoformat(v) if isinstance(v, str) else v),
+            "from_serializable": lambda v: datetime.fromisoformat(v) if isinstance(v, str) else v,
         },
     }
 
