@@ -3,13 +3,22 @@
 Command line options for app
 
 ```bash
-python -m app [OPTIONS] input
+app [OPTIONS] <input>
+```
+
+For development from a source checkout, the equivalent module invocation is:
+
+```bash
+python -m app [OPTIONS] <input>
 ```
 
 ## Options
 
 | Option                | Type | Description                                       | Default    | Choices       |
 |-----------------------|------|---------------------------------------------------|------------|---------------|
+| --config              | str  | Path to configuration file                        | -          | -             |
+| -v, --verbose         | bool | Enable debug logging                              | False      | [True, False] |
+| -q, --quiet           | bool | Show warnings and errors only                     | False      | [True, False] |
 | `input`               | str  | Path to input (file or folder)                    | *required* | -             |
 | `--output`            | str  | Path to output destination                        | *required* | -             |
 | `--min_dist`          | int  | Maximum distance between two waypoints            | 20         | -             |
@@ -23,37 +32,44 @@ python -m app [OPTIONS] input
 ### 1. Basic usage
 
 ```bash
-python -m app input
+app input
 ```
 
 ### 2. With verbose logging
 
 ```bash
-python -m app -v input
-python -m app --verbose input
+app -v input
+app --verbose input
 ```
 
 ### 3. With quiet mode
 
 ```bash
-python -m app -q input
-python -m app --quiet input
+app -q input
+app --quiet input
 ```
 
-### 4. With min_dist parameter
+### 4. With output parameter
 
 ```bash
-python -m app --min_dist 20 input
+app --output  input
 ```
 
-### 5. With extract_waypoints parameter
+### 5. With min_dist parameter
 
 ```bash
-python -m app --extract_waypoints True input
+app --min_dist 20 input
 ```
 
-### 6. With elevation parameter
+### 6. With extract_waypoints parameter
 
 ```bash
-python -m app --elevation True input
+app --extract_waypoints True input
+```
+
+### Developer usage
+
+```bash
+python -m app --help
+python -m app input
 ```

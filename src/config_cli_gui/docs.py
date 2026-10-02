@@ -16,15 +16,13 @@ class DocumentationGenerator:
         def pad(s, width):
             return s + " " * (width - len(s))
 
-        markdown_content = dedent(
-            """
+        markdown_content = dedent("""
             # Configuration Parameters
 
             These parameters are available to configure the behavior of your application.
             The parameters in the cli category can be accessed via the command line interface.
 
-            """
-        ).lstrip()
+            """).lstrip()
 
         for category_name, category in self.config_manager._categories.items():
             markdown_content += f'## Category "{category_name}"\n\n'
@@ -75,18 +73,39 @@ class DocumentationGenerator:
         self.config_manager.save_to_file(output_path.as_posix())
 
     def generate_cli_markdown_doc(self, output_file: str, app_name: str = "app"):
-        """Generate Markdown CLI documentation."""
+        """Generate Markdown CLI documentation.
+
+        The generated doc prefers the installed command for end users (for example
+        ``gpx-kml-converter --help``), while still including the direct module
+        invocation as a development fallback (``python -m gpx_kml_converter``).
+        """
         cli_params = self.config_manager.get_cli_parameters()
 
         if not cli_params:
             return
 
-        rows = []
+        base_app_name = (app_name or self.config_manager.get_app_name()).strip() or "app"
+        command_name = base_app_name.replace("_", "-")
+        module_name = base_app_name.replace("-", "_")
+
+        rows = [
+            ("--config", "str", "Path to configuration file", "-", "-"),
+            ("-v, --verbose", "bool", "Enable debug logging", "False", "[True, False]"),
+            (
+                "-q, --quiet",
+                "bool",
+                "Show warnings and errors only",
+                "False",
+                "[True, False]",
+            ),
+        ]
         required_params = []
         optional_params = []
 
         for param in cli_params:
-            cli_arg = f"`--{param.name}`" if not param.required else f"`{param.name}`"
+            cli_arg = (
+                f"`{param.name}`" if param.required else (f"`{param.cli_arg or f'--{param.name}'}`")
+            )
             typ = type(param.value).__name__
             desc = param.help
             value = (
@@ -95,7 +114,7 @@ class DocumentationGenerator:
             choices = str(param.choices) if param.choices else "-"
 
             rows.append((cli_arg, typ, desc, value, choices))
-            if value == "*required*":
+            if param.required:
                 required_params.append(param)
             else:
                 optional_params.append(param)
@@ -104,88 +123,104 @@ class DocumentationGenerator:
         def pad(s, width):
             return s + " " * (width - len(s))
 
-        widths = [max(len(str(col)) for col in column) for column in zip(*rows)]
         header = ["Option", "Type", "Description", "Default", "Choices"]
+        widths = [max(len(str(col)) for col in column) for column in zip(*rows, strict=False)]
 
-        table = (
+        table = dedent(
             "| "
-            + " | ".join(pad(h, w) for h, w in zip(header, widths))
+            + " | ".join(pad(h, w) for h, w in zip(header, widths, strict=False))
             + " |\n"
             + "|-"
             + "-|-".join("-" * w for w in widths)
             + "-|\n"
         )
         for row in rows:
-            table += "| " + " | ".join(pad(str(col), w) for col, w in zip(row, widths)) + " |\n"
+            table += (
+                "| "
+                + " | ".join(pad(str(col), w) for col, w in zip(row, widths, strict=False))
+                + " |\n"
+            )
 
-        # Generate examples
+        required_arg_names = [param.name for param in required_params]
+        required_target = (
+            " ".join(f"<{name}>" for name in required_arg_names) if required_arg_names else "input"
+        )
+        usage_command = f"{command_name} [OPTIONS] {required_target}".strip()
+        usage_module = f"python -m {module_name} [OPTIONS] {required_target}".strip()
+
         examples = []
-        required_arg = required_params[0].name if required_params else "example.input"
+        primary_target = required_arg_names[0] if required_arg_names else "input"
 
         examples.append(
-            dedent(
-                f"""
+            dedent(f"""
             ### 1. Basic usage
 
             ```bash
-            python -m {app_name} {required_arg}
+            {command_name} {primary_target}
             ```
-            """
-            )
-        )
-
-        # Add logging examples
-        examples.append(
-            dedent(
-                f"""
-        ### 2. With verbose logging
-
-        ```bash
-        python -m {app_name} -v {required_arg}
-        python -m {app_name} --verbose {required_arg}
-        ```
-        """
-            )
+            """)
         )
 
         examples.append(
-            dedent(
-                f"""
-        ### 3. With quiet mode
+            dedent(f"""
+            ### 2. With verbose logging
 
-        ```bash
-        python -m {app_name} -q {required_arg}
-        python -m {app_name} --quiet {required_arg}
-        ```
-        """
-            )
+            ```bash
+            {command_name} -v {primary_target}
+            {command_name} --verbose {primary_target}
+            ```
+            """)
         )
 
-        # Add more examples with optional parameters
+        examples.append(
+            dedent(f"""
+            ### 3. With quiet mode
+
+            ```bash
+            {command_name} -q {primary_target}
+            {command_name} --quiet {primary_target}
+            ```
+            """)
+        )
+
         for i, param in enumerate(optional_params[:3], 4):
-            if param.name in ["verbose", "quiet"]:
+            if param.name in {"verbose", "quiet", "config"}:
                 continue
             example_value = param.choices[0] if param.choices else param.value
             examples.append(
-                dedent(
-                    f"""
+                dedent(f"""
                 ### {i}. With {param.name} parameter
 
                 ```bash
-                python -m {app_name} --{param.name} {example_value} {required_arg}
+                {command_name} --{param.name} {example_value} {primary_target}
                 ```
-                """
-                )
+                """)
             )
 
-        markdown = dedent(
-            f"""
-            # Command Line Interface
+        examples.append(
+            dedent(f"""
+            ### Developer usage
 
-Command line options for {app_name}
+            ```bash
+            python -m {module_name} --help
+            python -m {module_name} {primary_target}
+            ```
+            """)
+        )
+
+        markdown = dedent(f"""
+# Command Line Interface
+
+Command line options for {base_app_name}
 
 ```bash
-python -m {app_name} [OPTIONS] {required_arg if required_params else ""}
+{usage_command}
+```
+
+For development from a source checkout, the equivalent module invocation is:
+
+```bash
+{usage_module}
 ```
 
 ## Options
@@ -195,8 +230,7 @@ python -m {app_name} [OPTIONS] {required_arg if required_params else ""}
 ## Examples
 
             {"".join(examples)}
-            """
-        ).strip()
+            """).strip()
 
         Path(output_file).parent.mkdir(parents=True, exist_ok=True)
         with open(output_file, "w", encoding="utf-8") as f:
