@@ -197,3 +197,6 @@ cython_debug/
 /.idea/config-cli-gui.iml
 /.idea/inspectionProfiles/profiles_settings.xml
 /.idea/inspectionProfiles/Project_Default.xml
+
+# setuptools_scm generated version file
+src/config_cli_gui/_version.py

@@ -1,4 +1,3 @@
-# config_cli_gui/cli_example.py
 """Generic CLI generator for configuration framework."""
 
 import argparse
@@ -7,7 +6,8 @@ from collections.abc import Callable
 from logging import Logger, getLogger
 from typing import Any
 
-from config_cli_gui.config import ConfigManager
+from config_cli_gui import logging as cli_logging
+from config_cli_gui.config import ConfigManager, ConfigParameter, ConfigSerializer
 
 
 def str2bool(v: str):
@@ -32,6 +32,22 @@ class ToggleOrBool(argparse.Action):
             setattr(namespace, self.dest, str2bool(values))
 
 
+def _make_type_converter(param: ConfigParameter) -> Callable[[str], Any]:
+    """Return an argparse ``type`` callable that converts a string to the parameter's type."""
+    serializer = ConfigSerializer()
+    target_type = param.type_
+
+    def convert(value: str) -> Any:
+        try:
+            return serializer.convert(value, target_type)
+        except ValueError as e:
+            raise argparse.ArgumentTypeError(str(e)) from e
+
+    # argparse uses __name__ in its error messages ("invalid int value: ...")
+    convert.__name__ = param.type_name
+    return convert
+
+
 class CliGenerator:
     """Generates a CLI automatically from a ConfigManager."""
 
@@ -42,7 +58,7 @@ class CliGenerator:
     # ----------------------------------------------------------------------
     # Argument parser builder
     # ----------------------------------------------------------------------
-    def create_argument_parser(self, description: str = None) -> argparse.ArgumentParser:
+    def create_argument_parser(self, description: str | None = None) -> argparse.ArgumentParser:
         if description is None:
             description = f"Command line interface for {self.app_name}"
 
@@ -57,15 +73,26 @@ class CliGenerator:
 
         # CLI parameters
         for p in self.config_manager.get_cli_parameters():
-            if p.required:  # POSITONAL ARGUMENT
-                parser.add_argument(p.name, help=p.help)
+            if p.required:  # POSITIONAL ARGUMENT
+                kwargs: dict[str, Any] = {"help": p.help}
+                if p.choices:
+                    kwargs["choices"] = p.choices
+                if not isinstance(p.value, (str, bool)):
+                    kwargs["type"] = _make_type_converter(p)
+                parser.add_argument(p.name, **kwargs)
                 continue
 
             # OPTIONAL FLAG
-            kwargs: dict[str, Any] = {
-                "help": f"{p.help} (default: {p.value})",
+            flag = p.cli_arg or f"--{p.name}"
+            default_hint = f" (default: {p.value})" if p.value not in (None, "") else ""
+            kwargs = {
+                "help": f"{p.help}{default_hint}",
                 "default": argparse.SUPPRESS,
+                # dest = parameter name, so that custom flags still map back to the parameter
+                "dest": p.name,
             }
+            if not p.choices:
+                kwargs["metavar"] = flag.lstrip("-").upper().replace("-", "_")
 
             # Handle different parameter types
             if isinstance(p.value, bool):
@@ -74,11 +101,11 @@ class CliGenerator:
                 kwargs["const"] = None  # triggers toggle mode
                 kwargs["action"] = ToggleOrBool
             else:
-                kwargs["type"] = type(p.value)
+                kwargs["type"] = _make_type_converter(p)
                 if p.choices:
                     kwargs["choices"] = p.choices
 
-            parser.add_argument(p.cli_arg, **kwargs)
+            parser.add_argument(flag, **kwargs)
 
         return parser
 
@@ -105,25 +132,38 @@ class CliGenerator:
     def run_cli(
         self,
         main_function: Callable[[ConfigManager, Logger], int],
-        description: str = None,
-        validator: Callable[[ConfigManager, Logger], bool] = None,
-        logger: Logger = None,
+        description: str | None = None,
+        validator: Callable[[ConfigManager, Logger], bool] | None = None,
+        logger: Logger | None = None,
+        argv: list[str] | None = None,
     ) -> int:
+        """Parse the command line, build the effective configuration and run ``main_function``.
+
+        Precedence (lowest to highest): values of the passed config manager,
+        the ``--config`` file, command line arguments.
+
+        The passed config manager is left untouched; ``main_function`` and
+        ``validator`` receive a copy of the same (sub)class.
+        """
         parser = self.create_argument_parser(description)
-        args = parser.parse_args()
+        args = parser.parse_args(argv)
 
         if logger is None:
             logger = getLogger(self.app_name)
 
-        # Load config_file only ONCE
-        config = ConfigManager(
-            categories=self.config_manager.get_categories(),
-            config_file=getattr(args, "config", None),
-        )
+        config = self.config_manager.copy()
 
-        # Apply CLI overrides
-        overrides = self.create_config_overrides(args)
-        config.apply_overrides(overrides)
+        config_file = getattr(args, "config", None)
+        if config_file:
+            try:
+                config.load_from_file(config_file)
+            except (OSError, ValueError) as e:
+                logger.error(f"Could not load configuration: {e}")
+                return 1
+
+        config.apply_overrides(self.create_config_overrides(args))
+        if config.app.log_level.value != self.config_manager.app.log_level.value:
+            self._sync_log_level(config)
 
         # Optional validation
         if validator and not validator(config, logger):
@@ -140,3 +180,10 @@ class CliGenerator:
             logger.error(f"Unexpected error: {e}")
             logger.debug(traceback.format_exc())
             return 1
+
+    @staticmethod
+    def _sync_log_level(config: ConfigManager) -> None:
+        """Apply a log level changed by --config/-v/-q to already initialized logging."""
+        manager = cli_logging._logger_manager
+        if manager is not None:
+            manager.set_log_level(str(config.app.log_level.value))

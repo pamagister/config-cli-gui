@@ -1,8 +1,9 @@
+import copy
 import json
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
-from dataclasses import dataclass
+from collections.abc import Iterable, Iterator
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -15,34 +16,70 @@ from config_cli_gui.configtypes.color import Color
 from config_cli_gui.configtypes.font import Font
 from config_cli_gui.configtypes.vector import Vector
 
+logger = logging.getLogger("config_cli_gui")
+
 
 @dataclass
 class ConfigParameter:
-    """Represents a single configuration parameter with metadata."""
+    """Represents a single configuration parameter with metadata.
 
-    name: str
-    value: Any
+    ``name`` may be omitted when the parameter is declared as an attribute of a
+    ``ConfigCategory``; it is then derived from the attribute name.
+    """
+
+    name: str = ""
+    value: Any = None
     choices: list[Any] | None = None
     help: str = ""
     cli_arg: str | None = None
     required: bool = False
     is_cli: bool = False
     category: str = "general"
+    _default: Any = field(default=None, init=False, repr=False, compare=False)
 
     def __post_init__(self):
-        if self.is_cli and self.cli_arg is None and not self.required:
-            self.cli_arg = f"--{self.name}"
+        self._default = copy.deepcopy(self.value)
         if isinstance(self.value, bool) and self.choices is None:
             self.choices = [True, False]
+        self._derive_cli_arg()
+
+    def _derive_cli_arg(self) -> None:
+        if self.name and self.is_cli and self.cli_arg is None and not self.required:
+            self.cli_arg = f"--{self.name}"
 
     @property
     def type_(self) -> type[Any]:
         """Return the Python type of this parameter’s value."""
         return type(self.value)
 
+    @property
+    def type_name(self) -> str:
+        """Return a platform-independent type name (e.g. ``Path`` instead of ``WindowsPath``)."""
+        if isinstance(self.value, Path):
+            return "Path"
+        return self.type_.__name__
+
+    @property
+    def default_value(self) -> Any:
+        """Return (a copy of) the value the parameter was declared with."""
+        return copy.deepcopy(self._default)
+
+    def reset(self) -> None:
+        """Restore the value the parameter was declared with."""
+        self.value = copy.deepcopy(self._default)
+
 
 class ConfigCategory(BaseModel, ABC):
     """Base class for configuration categories."""
+
+    def model_post_init(self, __context: Any) -> None:
+        category_name = self.get_category_name()
+        for attr_name, value in vars(self).items():
+            if isinstance(value, ConfigParameter):
+                if not value.name:
+                    value.name = attr_name
+                    value._derive_cli_arg()
+                value.category = category_name
 
     @abstractmethod
     def get_category_name(self) -> str:
@@ -58,6 +95,41 @@ class ConfigCategory(BaseModel, ABC):
                 params.append(value)
         return params
 
+    def reset_to_defaults(self) -> None:
+        """Restore all parameters of this category to their declared values."""
+        for param in self.get_parameters():
+            param.reset()
+
+
+def _to_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered in ("yes", "true", "t", "y", "1", "on"):
+            return True
+        if lowered in ("no", "false", "f", "n", "0", "off"):
+            return False
+    raise ValueError(f"Boolean value expected, got {value!r}")
+
+
+def _to_int(value: Any) -> int:
+    if isinstance(value, bool):
+        raise ValueError(f"Integer value expected, got {value!r}")
+    if isinstance(value, float):
+        if not value.is_integer():
+            raise ValueError(f"Integer value expected, got {value!r}")
+        return int(value)
+    return int(value)
+
+
+def _to_str(value: Any) -> str:
+    if isinstance(value, (str, int, float)):
+        return str(value)
+    raise ValueError(f"String value expected, got {value!r}")
+
 
 class ConfigSerializer:
     """Handles serialization and deserialization of custom config types."""
@@ -66,7 +138,9 @@ class ConfigSerializer:
         Font: {
             "to_serializable": lambda v: v.to_str(),
             "from_serializable": lambda v: (
-                Font.from_list(v) if isinstance(v, list) else Font.from_str(v)
+                v
+                if isinstance(v, Font)
+                else (Font.from_list(v) if isinstance(v, list) else Font.from_str(v))
             ),
         },
         Color: {
@@ -95,6 +169,14 @@ class ConfigSerializer:
         },
     }
 
+    # Lenient conversions for plain types (e.g. "42" -> 42 for an int parameter).
+    BUILTIN_CONVERTERS = {
+        bool: _to_bool,
+        int: _to_int,
+        float: float,
+        str: _to_str,
+    }
+
     def to_serializable(self, value: Any) -> Any:
         """Convert a value to a serializable format."""
         for type_class, methods in self.TYPE_MAPPING.items():
@@ -104,10 +186,33 @@ class ConfigSerializer:
 
     def from_serializable(self, value: Any, target_type: type[Any]) -> Any:
         """Convert a value from a serializable format to its original type."""
+        if not isinstance(target_type, type):
+            return value
         for type_class, methods in self.TYPE_MAPPING.items():
-            if target_type == type_class:
+            if issubclass(target_type, type_class):
                 return methods["from_serializable"](value)
         return value
+
+    def convert(self, value: Any, target_type: type[Any]) -> Any:
+        """Convert ``value`` to ``target_type``, raising ``ValueError`` if impossible.
+
+        Unlike ``from_serializable``, this also coerces the plain types
+        ``bool``, ``int``, ``float`` and ``str``.
+        """
+        if value is None or not isinstance(target_type, type) or target_type is type(None):
+            return value
+        converter = self.BUILTIN_CONVERTERS.get(target_type)
+        if converter is not None:
+            if type(value) is target_type:
+                return value
+            try:
+                return converter(value)
+            except (TypeError, ValueError) as e:
+                raise ValueError(f"Cannot convert {value!r} to {target_type.__name__}: {e}") from e
+        try:
+            return self.from_serializable(value, target_type)
+        except (TypeError, ValueError) as e:
+            raise ValueError(f"Cannot convert {value!r} to {target_type.__name__}: {e}") from e
 
 
 class AppConfig(ConfigCategory):
@@ -191,8 +296,6 @@ class ConfigManager:
         self._categories: dict[str, ConfigCategory] = {}
         self._serializer = ConfigSerializer()
         self.app: AppConfig = AppConfig()
-        # provide a default hook for application name retrieval; projects may
-        # override `get_app_name` on their concrete ConfigManager subclass.
 
         categories = (self.app, *categories)
         for category in categories:
@@ -231,6 +334,16 @@ class ConfigManager:
         values: Iterable[ConfigCategory] = self._categories.values()
         return tuple(values)
 
+    def iter_categories(self) -> Iterator[tuple[str, ConfigCategory]]:
+        """Iterate over ``(name, category)`` pairs in registration order."""
+        return iter(list(self._categories.items()))
+
+    def get_parameter(self, category_name: str, param_name: str) -> ConfigParameter | None:
+        """Return a single parameter or ``None`` if it does not exist."""
+        category = self._categories.get(category_name)
+        param = getattr(category, param_name, None) if category else None
+        return param if isinstance(param, ConfigParameter) else None
+
     def apply_overrides(self, overrides: dict[str, Any]) -> None:
         """Apply keyword overrides in the format `category__param=value`."""
         for key, value in overrides.items():
@@ -245,14 +358,36 @@ class ConfigManager:
                 else:
                     setattr(category, param_name, value)
 
+    def copy(self) -> "ConfigManager":
+        """Return an independent copy of the same (sub)class.
+
+        Categories and their parameters are deep-copied; any other attributes
+        of a subclass are shared (shallow copy), so they need not be copyable.
+        """
+        clone = copy.copy(self)
+        clone._categories = {}
+        for name, category in self._categories.items():
+            clone.add_category(name, copy.deepcopy(category))
+        return clone
+
+    def reset_to_defaults(self) -> None:
+        """Restore every parameter of every category to its declared value."""
+        for category in self._categories.values():
+            category.reset_to_defaults()
+
     def load_from_file(self, config_file: str, persist_last_used: bool = True) -> None:
         """Load configuration from a YAML or JSON file."""
         path = Path(config_file)
         if not path.exists():
             raise FileNotFoundError(f"Configuration file not found: {config_file}")
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f) if path.suffix.lower() in [".yml", ".yaml"] else json.load(f)
+
+        if data is None:
+            data = {}
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid configuration file (expected a mapping): {config_file}")
 
         self._apply_config_data(data)
         # Persist the information about the last used configuration file so the
@@ -260,34 +395,26 @@ class ConfigManager:
         # disabled by callers (e.g. GUI startup loading a default file) by
         # passing `persist_last_used=False`.
         if persist_last_used:
-            try:
-                persistence.write_last_used_config(self.get_app_name(), str(path))
-            except Exception:
-                # Persistence should not break normal config loading.
-                pass
-        try:
-            logging.getLogger("config_cli_gui").info(f"Loaded configuration from: {path}")
-        except Exception:
-            # Non-fatal: logging may not be configured yet.
-            pass
+            self._write_last_used(path)
+        logger.info(f"Loaded configuration from: {path}")
 
     def _apply_config_data(self, data: dict[str, Any]) -> None:
         """Apply loaded data to the configuration parameters."""
         for category_name, category_data in data.items():
             category = self._categories.get(category_name)
-            if not category:
+            if not category or not isinstance(category_data, dict):
                 continue
             for param_name, param_value in category_data.items():
-                if hasattr(category, param_name):
-                    param: ConfigParameter = getattr(category, param_name)
-                    if isinstance(param, ConfigParameter):
-                        target_type = param.type_
-                        if isinstance(param.value, Path):
-                            target_type = Path
-                        deserialized_value = self._serializer.from_serializable(
-                            param_value, target_type
-                        )
-                        param.value = deserialized_value
+                param = getattr(category, param_name, None)
+                if not isinstance(param, ConfigParameter):
+                    continue
+                try:
+                    param.value = self._serializer.convert(param_value, param.type_)
+                except ValueError as e:
+                    # Keep the raw value so that a single bad entry does not
+                    # prevent the remaining configuration from loading.
+                    logger.warning(f"{category_name}.{param_name}: {e}")
+                    param.value = param_value
 
     def save_to_file(self, config_file: str, format_: str = "auto") -> None:
         """Save the current configuration to a file."""
@@ -301,24 +428,23 @@ class ConfigManager:
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
             if file_format == "yaml":
-                yaml.dump(data, f, indent=2, sort_keys=False)
+                yaml.dump(data, f, indent=2, sort_keys=False, allow_unicode=True)
             else:
-                json.dump(data, f, indent=2)
+                json.dump(data, f, indent=2, ensure_ascii=False)
 
         if file_format == "yaml":
             self._append_comments_to_yaml(path)
 
         # Record the saved config as the last-used config as well.
+        self._write_last_used(path)
+        logger.info(f"Saved configuration to: {path}")
+
+    def _write_last_used(self, path: Path) -> None:
         try:
             persistence.write_last_used_config(self.get_app_name(), str(path))
-        except Exception:
-            # Ignore persistence failures when saving
-            pass
-        try:
-            logging.getLogger("config_cli_gui").info(f"Saved configuration to: {path}")
-        except Exception:
-            # Non-fatal: logging may not be configured yet.
-            pass
+        except Exception as e:
+            # Persistence must never break loading or saving a configuration.
+            logger.debug(f"Could not record last used config: {e}")
 
     def get_last_used_config(self) -> str | None:
         """Return the last used config file path recorded by the persistence layer.
@@ -349,37 +475,39 @@ class ConfigManager:
         return [p for p in self.get_all_parameters() if p.is_cli]
 
     def _append_comments_to_yaml(self, path: Path) -> None:
-        """Append helpful metadata comments to the YAML file."""
+        """Insert a metadata comment above every parameter in the YAML file."""
         lines = path.read_text(encoding="utf-8").splitlines()
         new_lines = []
-        all_params = {p.name: p for p in self.get_all_parameters()}
+        params = {
+            (name, p.name): p for name, c in self._categories.items() for p in c.get_parameters()
+        }
         current_category = ""
+        param_indent: int | None = None
 
         for line in lines:
             stripped = line.strip()
-            if (
-                stripped.endswith(":")
-                and not stripped.startswith("#")
-                and line.lstrip() == stripped
-            ):
-                current_category = stripped[:-1]
+            if not stripped or stripped.startswith("#"):
                 new_lines.append(line)
                 continue
 
-            param_name = stripped.split(":")[0].strip()
-            if param_name in all_params:
-                param = all_params[param_name]
-                if param.category == current_category:
-                    indent = " " * (line.find(param_name))
-                    comment_parts = [param.help, f"type={param.type_.__name__}"]
+            indent = len(line) - len(line.lstrip())
+            key = stripped.split(":", 1)[0].strip()
+            if indent == 0:
+                current_category = key
+                param_indent = None
+            else:
+                if param_indent is None:
+                    param_indent = indent
+                # Deeper lines belong to nested values (dicts/lists), not parameters.
+                param = params.get((current_category, key)) if indent == param_indent else None
+                if param is not None and stripped.startswith(f"{key}:"):
+                    comment_parts = [param.help, f"type={param.type_name}"]
                     if param.is_cli:
                         comment_parts.append("[CLI]")
                     if param.choices:
                         comment_parts.append(f"choices={param.choices}")
-
-                    comment = f"{indent}# " + " | ".join(filter(None, comment_parts))
-                    new_lines.append(comment)
+                    new_lines.append(" " * indent + "# " + " | ".join(filter(None, comment_parts)))
 
             new_lines.append(line)
 
-        path.write_text("\n".join(new_lines), encoding="utf-8")
+        path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")

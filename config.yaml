@@ -44,7 +44,7 @@ misc:
   some_vector2d: (1, 2)
   # Example vector 3D | type=Vector
   some_vector3d: (1.1, 2.2, 3.3)
-  # Path to the file to use | type=PosixPath
+  # Path to the file to use | type=Path
   some_file: some_file.txt
   # Color setting for the application | type=Color
   some_color: '#ff0000'

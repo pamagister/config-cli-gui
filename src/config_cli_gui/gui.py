@@ -1,12 +1,13 @@
-# config/gui_example.py
 """Generic GUI settings dialog generator for configuration framework."""
 
 import calendar
-import os
+import json
 import tkinter as tk
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from tkinter import colorchooser, filedialog, messagebox, ttk
+from typing import Any
 
 import ttkbootstrap
 from PIL import Image, ImageDraw, ImageTk
@@ -15,37 +16,50 @@ from config_cli_gui.config import (
     ConfigCategory,
     ConfigManager,
     ConfigParameter,
+    ConfigSerializer,
 )
 from config_cli_gui.configtypes.color import Color
 from config_cli_gui.configtypes.font import Font
 from config_cli_gui.configtypes.vector import Vector
 
+DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
 
 class ToolTip:
     """Create a tooltip for a given widget."""
 
-    def __init__(self, widget, text="widget info"):
+    def __init__(self, widget, text="widget info", delay_ms: int = 400):
         self.widget = widget
         self.text = text
+        self.delay_ms = delay_ms
         self.tipwindow = None
         self.id = None
         self.x = self.y = 0
 
-        self.widget.bind("<Enter>", self.on_enter)
-        self.widget.bind("<Leave>", self.on_leave)
+        self.widget.bind("<Enter>", self.on_enter, add="+")
+        self.widget.bind("<Leave>", self.on_leave, add="+")
+        self.widget.bind("<ButtonPress>", self.on_leave, add="+")
 
     def on_enter(self, event=None):
-        self.show_tooltip()
+        self._cancel()
+        self.id = self.widget.after(self.delay_ms, self.show_tooltip)
 
     def on_leave(self, event=None):
+        self._cancel()
         self.hide_tooltip()
 
+    def _cancel(self):
+        if self.id is not None:
+            self.widget.after_cancel(self.id)
+            self.id = None
+
     def show_tooltip(self):
+        self.id = None
         if self.tipwindow or not self.text:
             return
-        x, y, cx, cy = self.widget.bbox("insert")
-        x = x + self.widget.winfo_rootx() + 25
-        y = y + cy + self.widget.winfo_rooty() + 25
+        # Position next to the mouse pointer; works for every widget type.
+        x = self.widget.winfo_pointerx() + 15
+        y = self.widget.winfo_pointery() + 15
         self.tipwindow = tw = tk.Toplevel(self.widget)
         tw.wm_overrideredirect(True)
         tw.wm_geometry(f"+{x}+{y}")
@@ -54,11 +68,14 @@ class ToolTip:
             text=self.text,
             justify=tk.LEFT,
             background="#ffffe0",
+            foreground="#000000",
             relief=tk.SOLID,
             borderwidth=1,
-            font=("tahoma", "8", "normal"),
+            wraplength=400,
+            padx=4,
+            pady=2,
         )
-        label.pack(ipadx=1)
+        label.pack()
 
     def hide_tooltip(self):
         tw = self.tipwindow
@@ -206,6 +223,40 @@ class SettingsDialogGenerator:
         return GenericSettingsDialog(parent, self.config_manager, title, config_file)
 
 
+class _ScrollableFrame(ttk.Frame):
+    """Vertically scrollable frame whose ``content`` stretches to the available width."""
+
+    def __init__(self, master):
+        super().__init__(master)
+        self.canvas = tk.Canvas(self, highlightthickness=0, borderwidth=0)
+        self.scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.content = ttk.Frame(self.canvas, padding=(5, 5))
+        self._window = self.canvas.create_window((0, 0), window=self.content, anchor="nw")
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
+
+        self.content.bind(
+            "<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        )
+        self.canvas.bind(
+            "<Configure>", lambda e: self.canvas.itemconfigure(self._window, width=e.width)
+        )
+        # A plain tk.Canvas does not follow the ttk theme; keep its background in sync.
+        self.canvas.bind("<<ThemeChanged>>", lambda e: self._sync_background(), add="+")
+        self._sync_background()
+
+    def _sync_background(self) -> None:
+        background = ttk.Style().lookup("TFrame", "background")
+        if background:
+            self.canvas.configure(background=background)
+
+    def scroll(self, units: int) -> None:
+        if self.canvas.yview() != (0.0, 1.0):  # only when the content overflows
+            self.canvas.yview_scroll(units, "units")
+
+
 class GenericSettingsDialog:
     """Generic settings dialog for ConfigManager."""
 
@@ -221,21 +272,34 @@ class GenericSettingsDialog:
         self.config_file = config_file
         self.result = None
         self.widgets = {}
+        self._serializer = ConfigSerializer()
+        self._tabs: list[tuple[str, _ScrollableFrame]] = []
 
         # Create dialog window
         self.dialog = tk.Toplevel(parent)
         self.dialog.title(title)
-        self.dialog.geometry("700x600")
+        self.dialog.minsize(500, 350)
         self.dialog.transient(parent)
-        self.dialog.grab_set()
-
-        # Center the dialog
-        self.dialog.geometry(f"+{int(parent.winfo_rootx() + 50)}+{int(parent.winfo_rooty() + 50)}")
 
         self._create_widgets()
+        self._place_dialog(760, 600)
+        self.dialog.grab_set()
 
-        # Handle window closing
+        # Window closing and keyboard shortcuts
         self.dialog.protocol("WM_DELETE_WINDOW", self._on_cancel)
+        self.dialog.bind("<Escape>", lambda e: self._on_cancel())
+        self.dialog.bind("<Return>", lambda e: self._on_ok())
+        # Wheel events of all child widgets propagate to the toplevel binding.
+        self.dialog.bind("<MouseWheel>", self._on_mousewheel)
+        self.dialog.bind("<Button-4>", self._on_mousewheel)
+        self.dialog.bind("<Button-5>", self._on_mousewheel)
+
+    def _place_dialog(self, width: int, height: int) -> None:
+        """Center the dialog over its parent window."""
+        self.parent.update_idletasks()
+        x = self.parent.winfo_rootx() + max((self.parent.winfo_width() - width) // 2, 0)
+        y = self.parent.winfo_rooty() + max((self.parent.winfo_height() - height) // 2, 0)
+        self.dialog.geometry(f"{width}x{height}+{x}+{y}")
 
     def _create_widgets(self):
         """Create the settings dialog widgets."""
@@ -243,17 +307,21 @@ class GenericSettingsDialog:
         main_frame = ttk.Frame(self.dialog)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
+        # Button frame (packed first so it stays visible when the dialog shrinks)
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=(10, 0))
+
         # Create notebook for tabs
         self.notebook = ttk.Notebook(main_frame)
         self.notebook.pack(fill=tk.BOTH, expand=True)
 
         # Create tabs for each configuration category
-        for category_name, category in self.config_manager._categories.items():
+        for category_name, category in self.config_manager.iter_categories():
             self._create_category_tab(category_name, category)
 
-        # Button frame
-        button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill=tk.X, pady=(10, 0))
+        reset_btn = ttk.Button(button_frame, text="Reset Tab", command=self._on_reset_tab)
+        reset_btn.pack(side=tk.LEFT)
+        ToolTip(reset_btn, "Restore the default values of all settings on the current tab")
 
         # Apply: apply current settings (in-memory) but keep dialog open
         ttk.Button(button_frame, text="Apply", command=self._on_apply, width=10).pack(
@@ -268,43 +336,18 @@ class GenericSettingsDialog:
 
     def _create_category_tab(self, category_name: str, category):
         """Create a tab for a configuration category."""
-        # Create tab frame
-        tab_frame = ttk.Frame(self.notebook)
-        self.notebook.add(tab_frame, text="  " + category_name.title() + "  ")
+        tab = _ScrollableFrame(self.notebook)
+        self.notebook.add(tab, text="  " + category_name.title() + "  ")
+        self._tabs.append((category_name, tab))
+        self._add_category_parameters(tab.content, category, category_name)
 
-        # Create scrollable frame
-        canvas = tk.Canvas(tab_frame)
-        scrollbar = ttk.Scrollbar(tab_frame, orient="vertical", command=canvas.yview)
-        scrollable_frame = ttk.Frame(canvas)
-
-        scrollable_frame.bind(
-            "<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-
-        # Add parameters
-        self._add_category_parameters(scrollable_frame, category)
-
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-
-    def _add_category_parameters(self, parent, category: ConfigCategory):
+    def _add_category_parameters(
+        self, parent, category: ConfigCategory, category_name: str | None = None
+    ):
         """Add parameter widgets for a specific category."""
-        row = 0
-        category_name: str = category.get_category_name()
-        parameters = category.get_parameters()
+        category_name = category_name or category.get_category_name()
 
-        for param in parameters:
-            param.value = getattr(category, param.name).value
-
-            """
-            if param.required:
-                # Skip required parameters as they are not configurable in GUI
-                continue
-            """
-
+        for row, param in enumerate(category.get_parameters()):
             # Create label (fixed width for alignment)
             label = ttk.Label(parent, text=f"{param.name}:", width=28, anchor="w")
             label.grid(row=row, column=0, sticky="w", padx=5, pady=4)
@@ -315,18 +358,20 @@ class GenericSettingsDialog:
 
             # Add tooltip
             ToolTip(label, param.help)
-            if hasattr(widget, "entry_widget"):
-                ToolTip(widget.entry_widget, param.help)
-            else:
-                ToolTip(widget, param.help)
+            ToolTip(getattr(widget, "entry_widget", widget), param.help)
 
             # Store widget reference
             self.widgets[f"{category_name}__{param.name}"] = widget
 
-            row += 1
-
         # Configure column weights
         parent.columnconfigure(1, weight=1)
+
+    @staticmethod
+    def _bind_value(widget, getter: Callable[[], Any], setter: Callable[[Any], None]):
+        """Attach ``get_value()`` (typed, raises ValueError) and ``set_value(v)`` to a widget."""
+        widget.get_value = getter
+        widget.set_value = setter
+        return widget
 
     def _create_parameter_widget(self, parent, param: ConfigParameter):
         """Create appropriate widget for parameter type."""
@@ -335,7 +380,7 @@ class GenericSettingsDialog:
             var = tk.BooleanVar(value=param.value)
             widget = ttk.Checkbutton(parent, variable=var)
             widget.var = var
-            return widget
+            return self._bind_value(widget, lambda: bool(var.get()), lambda v: var.set(bool(v)))
 
         # Path type - File/Directory selector
         elif isinstance(param.value, Path):
@@ -357,14 +402,9 @@ class GenericSettingsDialog:
         elif isinstance(param.value, datetime):
             return self._create_datetime_widget(parent, param)
 
-        # List/Tuple with choices - Combobox
-        elif param.choices and not isinstance(param.value, bool):
-            var = tk.StringVar(value=str(param.value))
-            widget = ttk.Combobox(
-                parent, textvariable=var, values=list(param.choices), state="readonly"
-            )
-            widget.var = var
-            return widget
+        # Choices - Combobox
+        elif param.choices:
+            return self._create_choice_widget(parent, param)
 
         # List/Tuple type - Multi-entry widget
         elif isinstance(param.value, list) or isinstance(param.value, tuple):
@@ -379,7 +419,9 @@ class GenericSettingsDialog:
             var = tk.IntVar(value=param.value)
             widget = ttk.Spinbox(parent, from_=-999999, to=999999, textvariable=var)
             widget.var = var
-            return widget
+            return self._bind_value(
+                widget, lambda: self._serializer.convert(widget.get().strip(), int), var.set
+            )
 
         # Float type - Spinbox
         elif isinstance(param.value, float):
@@ -388,14 +430,36 @@ class GenericSettingsDialog:
                 parent, from_=-999999.0, to=999999.0, increment=1.0, textvariable=var
             )
             widget.var = var
-            return widget
+            return self._bind_value(
+                widget, lambda: self._serializer.convert(widget.get().strip(), float), var.set
+            )
 
         # Default: String type - Entry
         else:
-            var = tk.StringVar(value=str(param.value))
+            var = tk.StringVar(value="" if param.value is None else str(param.value))
             widget = ttk.Entry(parent, textvariable=var)
             widget.var = var
-            return widget
+            keep_none = param.value is None
+            return self._bind_value(
+                widget,
+                lambda: (var.get() or None) if keep_none else var.get(),
+                lambda v: var.set("" if v is None else str(v)),
+            )
+
+    def _create_choice_widget(self, parent, param: ConfigParameter):
+        """Create a read-only combobox; the selection maps back to the original choice object."""
+        lookup = {str(choice): choice for choice in param.choices or []}
+        var = tk.StringVar(value=str(param.value))
+        widget = ttk.Combobox(parent, textvariable=var, values=list(lookup), state="readonly")
+        widget.var = var
+
+        def get_value():
+            text = var.get()
+            if text in lookup:
+                return lookup[text]
+            return self._serializer.convert(text, param.type_)
+
+        return self._bind_value(widget, get_value, lambda v: var.set(str(v)))
 
     def _create_path_widget(self, parent, param: ConfigParameter):
         """Create file/directory selector widget."""
@@ -405,13 +469,20 @@ class GenericSettingsDialog:
         entry = ttk.Entry(frame, textvariable=var)
         entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
+        def initial_dir() -> str:
+            current = Path(var.get().strip() or ".").expanduser()
+            for candidate in (current, current.parent):
+                if candidate.is_dir():
+                    return str(candidate.resolve())
+            return str(Path.cwd())
+
         def browse_file():
-            path = filedialog.askopenfilename(initialdir=str(param.value.parent))
+            path = filedialog.askopenfilename(initialdir=initial_dir(), parent=self.dialog)
             if path:
                 var.set(path)
 
         def browse_dir():
-            path = filedialog.askdirectory(initialdir=str(param.value.parent))
+            path = filedialog.askdirectory(initialdir=initial_dir(), parent=self.dialog)
             if path:
                 var.set(path)
 
@@ -423,7 +494,32 @@ class GenericSettingsDialog:
 
         frame.var = var
         frame.entry_widget = entry
-        return frame
+        return self._bind_value(frame, lambda: Path(var.get().strip()), lambda v: var.set(str(v)))
+
+    @staticmethod
+    def _create_color_swatch(frame, var: tk.StringVar) -> tk.Label:
+        """Create a color preview label that follows ``var`` while the hex code is valid."""
+        swatch = tk.Label(frame, width=8, relief=tk.SOLID, borderwidth=1)
+
+        def on_color_change(*args):
+            if Color.is_valid_hex(var.get()):
+                swatch.config(bg=Color.from_hex(var.get()).to_hex())
+
+        var.trace_add("write", on_color_change)
+        on_color_change()
+        return swatch
+
+    @staticmethod
+    def _parse_color(text: str) -> Color:
+        if not Color.is_valid_hex(text):
+            raise ValueError(f"Invalid color {text!r}, expected #rrggbb")
+        return Color.from_hex(text)
+
+    def _pick_color(self, var: tk.StringVar) -> None:
+        initial = var.get() if Color.is_valid_hex(var.get()) else None
+        color = colorchooser.askcolor(color=initial, parent=self.dialog)
+        if color[1]:  # color[1] is hex string
+            var.set(color[1])
 
     def _create_color_widget(self, parent, param: ConfigParameter):
         """Create color picker widget."""
@@ -435,30 +531,16 @@ class GenericSettingsDialog:
         entry = ttk.Entry(frame, textvariable=var, width=10)
         entry.pack(side=tk.LEFT)
 
-        color_display = tk.Label(frame, width=8, bg=color_value.to_hex())
-        color_display.pack(side=tk.LEFT, padx=(8, 2))
+        self._create_color_swatch(frame, var).pack(side=tk.LEFT, padx=(8, 2), fill=tk.Y)
 
-        def pick_color():
-            color = colorchooser.askcolor(color=var.get())
-            if color[1]:  # color[1] is hex string
-                var.set(color[1])
-                color_display.config(bg=color[1])
-
-        pick_btn = ttk.Button(frame, text="Pick", command=pick_color, width=10)
+        pick_btn = ttk.Button(frame, text="Pick", command=lambda: self._pick_color(var), width=10)
         pick_btn.pack(side=tk.LEFT, padx=(5, 0))
-        color_display.config(bg=color_value.to_hex())
-
-        def on_color_change(*args):
-            try:
-                color_display.config(bg=var.get())
-            except tk.TclError:
-                pass
-
-        var.trace("w", on_color_change)
 
         frame.var = var
         frame.entry_widget = entry
-        return frame
+        return self._bind_value(
+            frame, lambda: self._parse_color(var.get().strip()), lambda v: var.set(v.to_hex())
+        )
 
     def _create_font_widget(self, parent, param: ConfigParameter):
         """Create font picker widget."""
@@ -466,13 +548,13 @@ class GenericSettingsDialog:
         font_value = param.value if isinstance(param.value, Font) else Font("Arial", 12, Color())
 
         # Font type
-        font_type_var = tk.StringVar(value=os.path.basename(font_value.name))
+        font_type_var = tk.StringVar(value=Path(font_value.name).name)
         font_type_combo = ttk.Combobox(
             frame,
             textvariable=font_type_var,
             values=Font.font_names,
             state="readonly",
-            width=25,
+            width=20,
         )
         font_type_combo.pack(side=tk.LEFT, padx=(0, 5))
 
@@ -483,29 +565,32 @@ class GenericSettingsDialog:
 
         # Font color
         color_var = tk.StringVar(value=font_value.color.to_hex())
-        color_display = tk.Label(frame, width=8, bg=font_value.color.to_hex())
-        color_display.pack(side=tk.LEFT, padx=(8, 2))
-        color_display.config(bg=font_value.color.to_hex())
+        self._create_color_swatch(frame, color_var).pack(side=tk.LEFT, padx=(8, 2), fill=tk.Y)
 
-        def pick_color():
-            color = colorchooser.askcolor(color=color_var.get())
-            if color[1]:
-                color_var.set(color[1])
-                color_display.config(bg=color[1])
-
-        pick_btn = ttk.Button(frame, text="Pick Color", command=pick_color, width=10)
+        pick_btn = ttk.Button(
+            frame, text="Pick Color", command=lambda: self._pick_color(color_var), width=10
+        )
         pick_btn.pack(side=tk.LEFT, padx=(5, 0))
 
-        def on_color_change(*args):
-            try:
-                color_display.config(bg=color_var.get())
-            except tk.TclError:
-                pass
+        def get_value() -> Font:
+            size = self._serializer.convert(font_size_spinbox.get().strip(), float)
+            if size <= 0:
+                raise ValueError(f"Font size must be positive, got {size}")
+            return Font(font_type_var.get(), size, self._parse_color(color_var.get().strip()))
 
-        color_var.trace("w", on_color_change)
+        def set_value(font: Font) -> None:
+            font_type_var.set(Path(font.name).name)
+            font_size_var.set(font.size)
+            color_var.set(font.color.to_hex())
 
         def show_preview():
-            font_size = int(font_size_var.get())
+            try:
+                font_obj = get_value()
+            except ValueError as e:
+                messagebox.showerror("Invalid font", str(e), parent=self.dialog)
+                return
+
+            font_size = int(font_obj.size)
             img_width = 170 + 3 * font_size
             img_height = 20 + font_size
 
@@ -514,22 +599,15 @@ class GenericSettingsDialog:
             preview_win.geometry(f"{img_width}x{img_height}")
             preview_win.transient(self.dialog)
             preview_win.grab_set()
-
-            font_color_hex = color_var.get()
-
-            font_obj = Font(font_type_var.get(), font_size, Color.from_hex(font_color_hex))
-            font = font_obj.get_image_font()
+            preview_win.bind("<Escape>", lambda e: preview_win.destroy())
 
             img = Image.new("RGB", (img_width, img_height), "white")
             draw = ImageDraw.Draw(img)
-
-            text = "Sample"
-
             draw.text(
                 (img_width / 2, img_height / 2),
-                text,
-                fill=font_color_hex,
-                font=font,
+                "Sample",
+                fill=font_obj.color.to_hex(),
+                font=font_obj.get_image_font(),
                 anchor="mm",
             )
 
@@ -547,17 +625,19 @@ class GenericSettingsDialog:
         frame.font_size_var = font_size_var
         frame.color_var = color_var
         frame.entry_widget = font_type_combo
-        return frame
+        return self._bind_value(frame, get_value, set_value)
 
     def _create_vector_widget(self, parent, param: ConfigParameter):
         """Create vector editor widget."""
         frame = ttk.Frame(parent)
 
         vector_value = param.value if isinstance(param.value, Vector) else Vector(0, 0)
-
         components = vector_value.to_list()
+        # Integer vectors stay integer vectors as long as the user enters whole numbers.
+        integer_vector = all(isinstance(c, int) for c in components)
 
         frame.vars = []
+        spinboxes = []
         for value in components:
             var = tk.DoubleVar(value=value)
             spinbox = ttk.Spinbox(
@@ -570,143 +650,180 @@ class GenericSettingsDialog:
             )
             spinbox.pack(side=tk.LEFT, padx=(0, 5))
             frame.vars.append(var)
+            spinboxes.append(spinbox)
 
-        if frame.winfo_children():
-            frame.entry_widget = frame.winfo_children()[0]
+        if spinboxes:
+            frame.entry_widget = spinboxes[0]
 
-        return frame
+        def get_value() -> Vector:
+            values = [self._serializer.convert(s.get().strip(), float) for s in spinboxes]
+            if integer_vector and all(v.is_integer() for v in values):
+                return Vector(*(int(v) for v in values))
+            return Vector(*values)
+
+        def set_value(vector: Vector) -> None:
+            for var, component in zip(frame.vars, vector.to_list()):
+                var.set(component)
+
+        return self._bind_value(frame, get_value, set_value)
 
     def _create_datetime_widget(self, parent, param: ConfigParameter):
         """Create datetime picker widget."""
         frame = ttk.Frame(parent)
 
         dt_value = param.value if isinstance(param.value, datetime) else datetime.now()
-        var = tk.StringVar(value=dt_value.strftime("%Y-%m-%d %H:%M"))
+        var = tk.StringVar(value=dt_value.strftime(DATETIME_FORMAT))
 
         entry = ttk.Entry(frame, textvariable=var)
         entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
+        def get_value() -> datetime:
+            return datetime.fromisoformat(var.get().strip())
+
         def pick_datetime():
-            dialog = CalendarDialog(self.dialog, dt_value)
+            try:
+                initial = get_value()
+            except ValueError:
+                initial = dt_value
+            dialog = CalendarDialog(self.dialog, initial)
             self.dialog.wait_window(dialog.dialog)
             if dialog.result:
-                var.set(dialog.result.strftime("%Y-%m-%d %H:%M"))
+                var.set(dialog.result.strftime(DATETIME_FORMAT))
 
         cal_btn = ttk.Button(frame, text="Calendar", command=pick_datetime, width=10)
         cal_btn.pack(side=tk.RIGHT, padx=(5, 0))
 
         frame.var = var
         frame.entry_widget = entry
-        return frame
+        return self._bind_value(frame, get_value, lambda v: var.set(v.strftime(DATETIME_FORMAT)))
 
     def _create_list_widget(self, parent, param: ConfigParameter):
         """Create list/tuple editor widget."""
         frame = ttk.Frame(parent)
 
-        # Convert list/tuple to comma-separated string
-        if isinstance(param.value, (list | tuple)):
-            value_str = ", ".join(str(item) for item in param.value)
-        else:
-            value_str = str(param.value)
+        sequence_type = type(param.value)
+        item_types = {type(item) for item in param.value}
+        # Homogeneous lists of plain values keep their item type; everything else becomes str.
+        item_type = item_types.pop() if len(item_types) == 1 else str
+        if item_type not in (bool, int, float, str):
+            item_type = str
 
-        var = tk.StringVar(value=value_str)
+        var = tk.StringVar(value=", ".join(str(item) for item in param.value))
         entry = ttk.Entry(frame, textvariable=var)
         entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         ttk.Label(frame, text="(comma-separated)").pack(side=tk.RIGHT, padx=(5, 0))
 
+        def get_value():
+            items = [item.strip() for item in var.get().split(",") if item.strip()]
+            return sequence_type(self._serializer.convert(item, item_type) for item in items)
+
         frame.var = var
         frame.entry_widget = entry
-        return frame
+        return self._bind_value(
+            frame, get_value, lambda v: var.set(", ".join(str(item) for item in v))
+        )
 
     def _create_dict_widget(self, parent, param: ConfigParameter):
         """Create dictionary editor widget."""
         frame = ttk.Frame(parent)
 
-        # Convert dict to JSON-like string
-        if isinstance(param.value, dict):
-            import json
-
-            value_str = json.dumps(param.value, indent=None, separators=(",", ":"))
-        else:
-            value_str = str(param.value)
-
-        var = tk.StringVar(value=value_str)
+        var = tk.StringVar(value=json.dumps(param.value, separators=(",", ":")))
         entry = ttk.Entry(frame, textvariable=var)
         entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         ttk.Label(frame, text="(JSON format)").pack(side=tk.RIGHT, padx=(5, 0))
 
+        def get_value() -> dict:
+            value = json.loads(var.get())
+            if not isinstance(value, dict):
+                raise ValueError("A JSON object ({...}) is expected")
+            return value
+
         frame.var = var
         frame.entry_widget = entry
-        return frame
+        return self._bind_value(
+            frame, get_value, lambda v: var.set(json.dumps(v, separators=(",", ":")))
+        )
 
-    def _on_ok(self):
-        """Handle OK button click."""
-        try:
-            # Remember old theme to detect changes
-            try:
-                old_theme = self.config_manager.app.theme.value
-            except Exception:
-                old_theme = None
+    # ------------------------------------------------------------------
+    # Event handlers
+    # ------------------------------------------------------------------
+    def _current_tab(self) -> tuple[str, _ScrollableFrame] | None:
+        if not self._tabs:
+            return None
+        return self._tabs[self.notebook.index(self.notebook.select())]
 
-            self.__persist_settings()
+    def _on_mousewheel(self, event):
+        """Scroll the visible tab, unless the wheel is used on a value widget."""
+        if event.widget.winfo_class() in ("TCombobox", "TSpinbox"):
+            return
+        tab = self._current_tab()
+        if tab is None:
+            return
+        if getattr(event, "num", None) == 4:
+            units = -1
+        elif getattr(event, "num", None) == 5:
+            units = 1
+        else:
+            units = -1 if event.delta > 0 else 1
+        tab[1].scroll(units)
 
-            # Apply GUI updates (theme change etc.) after persisting
-            self._apply_gui_updates(old_theme)
-
-            self.dialog.destroy()
-
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to save configuration: {e}")
-
-    def __persist_settings(self):
-        # Update configuration with widget values
-        overrides = {}
+    def _on_reset_tab(self):
+        """Reset the widgets of the current tab to the declared default values."""
+        tab = self._current_tab()
+        if tab is None:
+            return
+        category_name = tab[0]
+        if not messagebox.askyesno(
+            "Reset to defaults",
+            f"Reset all settings on the '{category_name}' tab to their default values?\n"
+            "Changes are saved when you press OK or Apply.",
+            parent=self.dialog,
+        ):
+            return
         for key, widget in self.widgets.items():
-            category_name, param_name = key.split("__", 1)
-            category = self.config_manager.get_category(category_name)
-            param_value = getattr(category, param_name).value
-
-            if isinstance(param_value, Font):
-                selected_font_name = widget.font_type_var.get()
-                font_type = selected_font_name
-                font_size = widget.font_size_var.get()
-                font_color = Color.from_hex(widget.color_var.get())
-                overrides[key] = Font(font_type, font_size, font_color)
+            widget_category, param_name = key.split("__", 1)
+            if widget_category != category_name:
                 continue
+            param = self.config_manager.get_parameter(widget_category, param_name)
+            if param is not None:
+                widget.set_value(param.default_value)
 
-            if isinstance(param_value, Vector):
-                components = [v.get() for v in widget.vars]
-                overrides[key] = Vector.from_list(components)
-                continue
+    def _collect_values(self) -> tuple[dict[str, Any], list[tuple[str, str]]]:
+        """Read all widgets; return ``(overrides, [(key, error message), ...])``."""
+        values: dict[str, Any] = {}
+        errors: list[tuple[str, str]] = []
+        for key, widget in self.widgets.items():
+            try:
+                values[key] = widget.get_value()
+            except (ValueError, TypeError, tk.TclError) as e:
+                errors.append((key, str(e)))
+        return values, errors
 
-            value = widget.var.get()
+    def _show_errors(self, errors: list[tuple[str, str]]) -> None:
+        """Report invalid fields and jump to the first one."""
+        lines = [f"• {key.replace('__', '.')}: {message}" for key, message in errors]
+        messagebox.showerror(
+            "Invalid settings",
+            "Please correct the following settings:\n\n" + "\n".join(lines),
+            parent=self.dialog,
+        )
+        first_key = errors[0][0]
+        category_name = first_key.split("__", 1)[0]
+        for index, (name, _) in enumerate(self._tabs):
+            if name == category_name:
+                self.notebook.select(index)
+                break
+        widget = self.widgets[first_key]
+        getattr(widget, "entry_widget", widget).focus_set()
 
-            # Convert value to appropriate type
-            if type(param_value) == bool:
-                overrides[key] = value
-            elif type(param_value) == Path:
-                overrides[key] = Path(value)
-            elif type(param_value) == Color:
-                overrides[key] = Color.from_hex(value)
-            elif type(param_value) == datetime:
-                overrides[key] = datetime.strptime(value, "%Y-%m-%d %H:%M")
-            elif type(param_value) in (list, tuple):
-                # Parse comma-separated values
-                items = [item.strip() for item in value.split(",") if item.strip()]
-                overrides[key] = type(param_value)(items)
-            elif type(param_value) == dict:
-                # Parse JSON format
-                import json
-
-                overrides[key] = json.loads(value)
-            elif type(param_value) == int:
-                overrides[key] = int(value)
-            elif type(param_value) == float:
-                overrides[key] = float(value)
-            else:
-                overrides[key] = value
+    def _persist_settings(self) -> bool:
+        """Apply the widget values and save them; return False if a value is invalid."""
+        overrides, errors = self._collect_values()
+        if errors:
+            self._show_errors(errors)
+            return False
 
         # Apply overrides to config manager (in-memory)
         self.config_manager.apply_overrides(overrides)
@@ -715,6 +832,12 @@ class GenericSettingsDialog:
         self.config_manager.save_to_file(self.config_file)
 
         self.result = "ok"
+        return True
+
+    def _current_theme(self) -> str | None:
+        app = getattr(self.config_manager, "app", None)
+        theme = getattr(app, "theme", None)
+        return getattr(theme, "value", None)
 
     def _apply_gui_updates(self, old_theme=None):
         """Apply GUI-level updates that should happen after settings are persisted.
@@ -723,22 +846,29 @@ class GenericSettingsDialog:
         logic is centralized here so it can be called from both Apply and OK
         handlers.
         """
-        try:
-            new_theme = None
+        new_theme = self._current_theme()
+        if new_theme and new_theme != old_theme:
             try:
-                new_theme = self.config_manager.app.theme.value
+                ttkbootstrap.Style().theme_use(new_theme)
             except Exception:
-                new_theme = None
+                # Best-effort; don't crash the settings dialog if theme switch fails
+                pass
 
-            if new_theme and new_theme != old_theme:
-                try:
-                    ttkbootstrap.Style().theme_use(new_theme)
-                except Exception:
-                    # Best-effort; don't crash the settings dialog if theme switch fails
-                    pass
-        except Exception:
-            # Swallow any unexpected errors to keep UI responsive
-            pass
+    def _save(self) -> bool:
+        old_theme = self._current_theme()
+        try:
+            if not self._persist_settings():
+                return False
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save configuration: {e}", parent=self.dialog)
+            return False
+        self._apply_gui_updates(old_theme)
+        return True
+
+    def _on_ok(self):
+        """Handle OK button click."""
+        if self._save():
+            self.dialog.destroy()
 
     def _on_cancel(self):
         """Handle Cancel button click."""
@@ -751,15 +881,4 @@ class GenericSettingsDialog:
         This applies the widget values to the in-memory configuration and
         applies the theme change live if the GUI theme parameter is present.
         """
-        try:
-            # Remember current theme, persist settings and apply GUI updates
-            try:
-                old_theme = self.config_manager.app.theme.value
-            except Exception:
-                old_theme = None
-
-            self.__persist_settings()
-            self._apply_gui_updates(old_theme)
-
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to save configuration: {e}")
+        self._save()

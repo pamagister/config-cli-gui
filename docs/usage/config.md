@@ -1,7 +1,7 @@
 # Configuration Parameters
 
 These parameters are available to configure the behavior of your application.
-The parameters in the cli category can be accessed via the command line interface.
+Parameters marked as CLI parameters can also be set via the command line interface.
 
 ## Configuration File Reference
 
@@ -9,8 +9,6 @@ The actual configuration is stored in [`config.yaml`](../../config.yaml). You ca
 
 - Edit the configuration file directly using your text editor
 - Use the `--config` command-line option to specify a custom config file
-- Place a `config.yaml` in your application's config
-  directory (typically `~/.config/config-cli-gui/`)
 
 ## Category "app" {#app}
 
@@ -47,13 +45,13 @@ The actual configuration is stored in [`config.yaml`](../../config.yaml). You ca
 
 ## Category "misc" {#misc}
 
-| Name          | Type      | Description                       | Default                                                      | Choices |
-|---------------|-----------|-----------------------------------|--------------------------------------------------------------|---------|
-| some_numeric  | int       | Example integer                   | 42                                                           | -       |
-| some_vector2d | Vector    | Example vector 2D                 | Vector(1, 2)                                                 | -       |
-| some_vector3d | Vector    | Example vector 3D                 | Vector(1.1, 2.2, 3.3)                                        | -       |
-| some_file     | PosixPath | Path to the file to use           | PosixPath('some_file.txt')                                   | -       |
-| some_color    | Color     | Color setting for the application | Color(255, 0, 0)                                             | -       |
-| some_date     | datetime  | Date setting for the application  | datetime.datetime(2025, 12, 31, 10, 30, 45)                  | -       |
-| some_font     | Font      | Font setting for the application  | Font(type='DejaVuSans.ttf', size=12, color=Color(0, 0, 255)) | -       |
+| Name          | Type     | Description                       | Default                                                      | Choices |
+|---------------|----------|-----------------------------------|--------------------------------------------------------------|---------|
+| some_numeric  | int      | Example integer                   | 42                                                           | -       |
+| some_vector2d | Vector   | Example vector 2D                 | Vector(1, 2)                                                 | -       |
+| some_vector3d | Vector   | Example vector 3D                 | Vector(1.1, 2.2, 3.3)                                        | -       |
+| some_file     | Path     | Path to the file to use           | PosixPath('some_file.txt')                                   | -       |
+| some_color    | Color    | Color setting for the application | Color(255, 0, 0)                                             | -       |
+| some_date     | datetime | Date setting for the application  | datetime.datetime(2025, 12, 31, 10, 30, 45)                  | -       |
+| some_font     | Font     | Font setting for the application  | Font(type='DejaVuSans.ttf', size=12, color=Color(0, 0, 255)) | -       |
 

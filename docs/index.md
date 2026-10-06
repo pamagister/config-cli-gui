@@ -32,16 +32,13 @@ pip install config-cli-gui
 
 ## ✨ Features
 
-  * **Single Source of Truth**: Define all your application parameters in one place using simple, dataclass-like structures based on Pydantic's `BaseModel`. This ensures consistency and reduces errors across your application.
+  * **Single Source of Truth**: Define all your application parameters once, grouped in categories based on Pydantic's `BaseModel`. Config files, CLI, GUI and docs are all generated from these definitions.
 
     ```yaml
-    gui:
-      # GUI theme setting | type=str | choices=['light', 'dark', 'auto']
-      theme: light
     misc:
       # Example integer | type=int
       some_numeric: 42
-      # Path to the file to use | type=PosixPath
+      # Path to the file to use | type=Path
       some_file: some_file.txt
       # Color setting for the application | type=Color
       some_color: '#ff0000'
@@ -49,256 +46,159 @@ pip install config-cli-gui
       some_font: 'DejaVuSans.ttf, 12, #0000ff'
     ```
 
-  * **Categorized Configuration**: Organize your parameters into logical categories (e.g., `cli`, `app`, `gui`) for better structure and maintainability.
-  * **Dynamic CLI Generation**: Automatically generate `argparse`-compatible command-line arguments directly from your defined configuration parameters, including help texts, types, and choices.
-  * **Config File Management**: Easily load and save configurations from/to YAML or JSON files, allowing users to customize default settings.
-  * **GUI Settings Dialogs**: Dynamically create Tkinter-based settings dialogs for your application, allowing users to intuitively modify configuration parameters via a graphical interface.
+  * **Categorized Configuration**: Organize your parameters into logical categories (e.g. `cli`, `gui`, `misc`). A built-in `app` category provides logging and theme settings for every project.
+  * **Rich Types**: `bool`, `int`, `float`, `str`, `list`, `dict`, `Path`, `datetime` and the bundled `Color`, `Font` and `Vector` types are serialized, parsed from the command line and edited in the GUI.
+  * **Dynamic CLI Generation**: `argparse` arguments (positional or flags) with help texts, types and choices are generated automatically.
+  * **Config File Management**: Load and save YAML or JSON files. Saved YAML files contain a comment with description, type and choices for every parameter.
+  * **GUI Settings Dialogs**: A Tkinter/ttkbootstrap settings dialog with one tab per category, type-specific editors (file browser, color picker, font preview, calendar), per-field validation and "Reset Tab".
 
     ![settings_dlg.png](_static/img/settings_dlg.png)
  
-  * **Documentation Generation**: Generate detailed Markdown documentation for both your CLI options and all configuration parameters, keeping your user guides always up-to-date with your codebase.
+  * **Documentation Generation**: Generate Markdown documentation for your CLI options and all configuration parameters, keeping your user guides always up-to-date with your codebase.
 
     ![settings_doc.png](_static/img/settings_doc.png)
 
-  * **Override System**: Supports robust overriding of configuration values via configuration files and command-line arguments, with clear precedence.
+  * **Override System**: Clear precedence: declared defaults < `--config` file < command line arguments.
 
 ---
 
 ## 📚 Usage
 
-### 1\. Define Your Configuration
+### 1\. Define your configuration
 
-Start by defining your application's configuration parameters in a central `config.py` file within your project. You will inherit from `config-cli-gui`'s `GenericConfigManager` and `BaseConfigCategory`.
+Create categories by subclassing `ConfigCategory` and a manager by subclassing `ConfigManager`.
+The parameter `name` is optional and defaults to the attribute name.
 
 ```python
-# my_project/config_example.py
-
+# my_project/config.py
 from datetime import datetime
 from pathlib import Path
 
-from config_cli_gui.config import (
-    ConfigCategory,
-    ConfigManager,
-    ConfigParameter,
-)
-from config_cli_gui.configtypes.color import Color
-from config_cli_gui.configtypes.font import Font
-from config_cli_gui.configtypes.vector import Vector
+from config_cli_gui import Color, ConfigCategory, ConfigManager, ConfigParameter, Font, Vector
+
+
+class CliConfig(ConfigCategory):
+    def get_category_name(self) -> str:
+        return "cli"
+
+    input: ConfigParameter = ConfigParameter(
+        value="", help="Path to input file", required=True, is_cli=True  # positional argument
+    )
+    min_dist: ConfigParameter = ConfigParameter(
+        value=20, help="Minimum distance between two points", is_cli=True  # --min_dist
+    )
+    elevation: ConfigParameter = ConfigParameter(
+        value=False, help="Include elevation data", is_cli=True  # --elevation [true|false]
+    )
 
 
 class MiscConfig(ConfigCategory):
     def get_category_name(self) -> str:
         return "misc"
 
-    some_numeric: ConfigParameter = ConfigParameter(
-        name="some_numeric",
-        value=int(42),
-        help="Example integer",
-        is_cli=True,
-    )
-
-    some_vector: ConfigParameter = ConfigParameter(
-        name="some_vector",
-        value=Vector(1, 2, 3),
-        help="Example vector",
-    )
-
-    some_file: ConfigParameter = ConfigParameter(
-        name="some_file",
-        value=Path("some_file.txt"),
-        help="Path to the file to use",
-    )
-
-    some_color: ConfigParameter = ConfigParameter(
-        name="some_color",
-        value=Color(255, 0, 0),
-        help="Color setting for the application",
-    )
-
-    some_date: ConfigParameter = ConfigParameter(
-        name="some_date",
-        value=datetime.fromisoformat("2025-12-31 10:30:45"),
-        help="Date setting for the application",
-    )
-
+    some_vector: ConfigParameter = ConfigParameter(value=Vector(1, 2, 3), help="Example vector")
+    some_file: ConfigParameter = ConfigParameter(value=Path("some_file.txt"), help="File to use")
+    some_color: ConfigParameter = ConfigParameter(value=Color(255, 0, 0), help="Color")
+    some_date: ConfigParameter = ConfigParameter(value=datetime(2025, 12, 31, 10, 30), help="Date")
     some_font: ConfigParameter = ConfigParameter(
-        name="some_font",
-        value=Font("DejaVuSans.ttf", size=12, color=Color(0, 0, 255)),
-        help="Font setting for the application",
+        value=Font("DejaVuSans.ttf", size=12, color=Color(0, 0, 255)), help="Font"
     )
 
 
-class AppConfig(ConfigCategory):
-    """Application-specific configuration parameters."""
+class ProjectConfigManager(ConfigManager):
+    """The built-in `app` category (logging, theme, ...) is added automatically."""
 
-    def get_category_name(self) -> str:
-        return "app"
-
-    log_level: ConfigParameter = ConfigParameter(
-        name="log_level",
-        value="INFO",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging level for the application",
-    )
-
-    log_file_max_size: ConfigParameter = ConfigParameter(
-        name="log_file_max_size",
-        value=10,
-        help="Maximum log file size in MB before rotation",
-    )
-
-
-class ProjectConfigManager(ConfigManager):  # Inherit from ConfigManager
-    """Main configuration manager that handles all parameter categories."""
-
-    app: AppConfig
+    cli: CliConfig
     misc: MiscConfig
-    
+
     def __init__(self, config_file: str | None = None, **kwargs):
-        """Initialize the configuration manager with all parameter categories."""
-        categories = (MiscConfig(), AppConfig())
-        super().__init__(categories, config_file, **kwargs)
+        super().__init__((CliConfig(), MiscConfig()), config_file, **kwargs)
 
-
+    @staticmethod
+    def get_app_name() -> str:
+        return "my-app"  # used for the "last used config" store and the CLI docs
 ```
 
-### 2\. Generate CLI
-
-Use the generic CLI functions to parse command-line arguments based on your defined `CliConfig`.
+Access values via `config.<category>.<parameter>.value`:
 
 ```python
-# my_project/cli_example.py
-from config_cli_gui.cli import CliGenerator
-from config_cli_gui.config import ConfigManager
-from tests.example_project.config.config_example import ProjectConfigManager
-from tests.example_project.core.base import BaseGPXProcessor
-from tests.example_project.core.logging import initialize_logging
+config = ProjectConfigManager(misc__some_color=Color(0, 255, 0))  # keyword overrides
+print(config.cli.min_dist.value, config.app.log_level.value)
+
+config.save_to_file("config.yaml")  # YAML or JSON, with descriptive comments in YAML
+config = ProjectConfigManager("config.yaml")  # load it again
+config.reset_to_defaults()  # restore the declared values
+```
+
+### 2\. Generate the CLI
+
+`run_cli` parses the command line, loads `--config`, applies the CLI overrides and calls your
+main function with a configured copy of your manager. `-v`/`--verbose` and `-q`/`--quiet` are
+added automatically.
+
+```python
+# my_project/cli.py
+import sys
+from logging import Logger
+
+from config_cli_gui import CliGenerator
+from config_cli_gui.logging import initialize_logging
+
+from my_project.config import ProjectConfigManager
 
 
-def run_main_processing(_config: ConfigManager) -> int:
-    """Main processing function that gets called by the CLI generator.
-
-    Args:
-        _config: Configuration manager with all settings
-
-    Returns:
-        Exit code (0 for success, non-zero for error)
-    """
-    # Initialize logging system
-    logger_manager = initialize_logging(_config)
-    logger = logger_manager.get_logger("config_cli_gui.cli")
-
-    try:
-        # Log startup information
-        logger.info("Starting config_cli_gui CLI")
-        logger_manager.log_config_summary()
-
-        logger.info(f"Processing input")
-
-        # Create and run BaseGPXProcessor
-        processor = BaseGPXProcessor(
-            _config.get_category("cli").input.default,
-            _config.get_category("cli").output.default,
-            _config.get_category("cli").min_dist.default,
-            _config.get_category("app").date_format.default,
-            _config.get_category("cli").elevation.default,
-            logger=logger,
-        )
-
-        logger.info("Starting conversion process")
-
-        # Run the processing (adjust method name based on your actual implementation)
-        result_files = processor.compress_files()
-        logger.info(f"Successfully processed {result_files}")
-        return 0
-
-    except Exception as e:
-        logger.error(f"Processing failed: {e}")
-        logger.debug("Full traceback:", exc_info=True)
-        return 1
+def run(config: ProjectConfigManager, logger: Logger) -> int:
+    logger.info(f"Processing {config.cli.input.value} (min_dist={config.cli.min_dist.value})")
+    return 0  # exit code
 
 
-def main():
-    """Main entry point for the CLI application."""
-    # Create the base configuration manager
-    config_manager = ProjectConfigManager()
-
-    # Create CLI generator
-    cli_generator = CliGenerator(config_manager=config_manager, app_name="config_cli_gui")
-
-    # Run the CLI with our main processing function
-    return cli_generator.run_cli(
-        main_function=run_main_processing,
-        description="Example CLI for config-cli-gui using the generic config framework.",
-    )
+def main() -> int:
+    config = ProjectConfigManager()
+    logger = initialize_logging(
+        log_level=config.app.log_level.value,
+        enable_file_logging=config.app.enable_file_logging.value,
+    ).get_logger("cli")
+    return CliGenerator(config, app_name="my-app").run_cli(run, logger=logger)
 
 
 if __name__ == "__main__":
-    import sys
-
     sys.exit(main())
 ```
 
-### 3\. Integrate GUI Settings Dialog
-
-The `SettingsDialog` from `config-cli-gui` (or your project's adapted version) can be used to easily create a settings window.
-
-```python
-# my_project/gui_example.py (Simplified example)
-import tkinter as tk
-from tests.example_project.config.config_example import ProjectConfigManager
-from config_cli_gui.gui import GenericSettingsDialog  # Assuming gui_settings is part of the generic lib or adapted
-
-
-def open_settings_window(parent_root, config_manager: ProjectConfigManager):
-    dialog = GenericSettingsDialog(parent_root, config_manager)
-    parent_root.wait_window(dialog.dialog)
-    # After dialog closes, config_manager will have updated values if 'OK' was clicked
-    print("Settings updated or cancelled.")
-    print(f"New GUI Theme: {config_manager.get_category('gui').theme.default}")
-
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    root.withdraw()  # Hide main window for this example
-
-    # Initialize your project's config manager
-    project_config = ProjectConfigManager()
-
-    open_settings_window(root, project_config)
-
-    root.destroy()
+```bash
+my-app --config config.yaml --min_dist 50 --elevation -v data.gpx
 ```
 
-### 4\. Generate Documentation and Default Config
-
-Use the static methods on your `ProjectConfigManager` to generate `config.yaml`, `cli.md`, and `config.md` files.
+### 3\. Integrate the GUI settings dialog
 
 ```python
-# scripts/generate_docs.py (or similar script in your project)
-from tests.example_project.config.config_example import ProjectConfigManager
-from config_cli_gui.docs import DocumentationGenerator
-import os
+import ttkbootstrap
 
-# Define output paths
-output_dir = "docs/generated"
-os.makedirs(output_dir, exist_ok=True)
+from config_cli_gui import SettingsDialogGenerator
 
-default_config = "config.yaml"  # At the project root or similar
-default_cli_doc = os.path.join(output_dir, "cli.md")
-default_config_doc = os.path.join(output_dir, "config.md")
-_config = ProjectConfigManager()
-doc_gen = DocumentationGenerator(_config)
-doc_gen.generate_default_config_file(output_file=default_config)
-print(f"Generated: {default_config}")
+from my_project.config import ProjectConfigManager
 
-doc_gen.generate_config_markdown_doc(output_file=default_config_doc)
-print(f"Generated: {default_config_doc}")
+config = ProjectConfigManager()
+root = ttkbootstrap.Window(themename=config.app.theme.value)
 
-doc_gen.generate_cli_markdown_doc(output_file=default_cli_doc)
-print(f"Generated: {default_cli_doc}")
-
-print("Documentation and default config generation complete.")
+dialog = SettingsDialogGenerator(config).create_settings_dialog(root, config_file="config.yaml")
+root.wait_window(dialog.dialog)
+if dialog.result == "ok":  # values were applied to `config` and saved to config.yaml
+    print(config.misc.some_color.value)
 ```
 
-By following this structure, `config-cli-gui` provides a robust and maintainable foundation for your application's configuration needs.
+### 4\. Generate documentation and a default config file
+
+```python
+from config_cli_gui import DocumentationGenerator
+
+from my_project.config import ProjectConfigManager
+
+doc_gen = DocumentationGenerator(ProjectConfigManager())
+doc_gen.generate_default_config_file("config.yaml")
+doc_gen.generate_config_markdown_doc("docs/usage/config.md", config_file_path="../../config.yaml")
+doc_gen.generate_cli_markdown_doc("docs/usage/cli.md")  # command name from get_app_name()
+```
+
+A complete example project (CLI, GUI with log window, docs generation) is located in
+[`tests/example_project`](https://github.com/pamagister/config-cli-gui/tree/main/tests/example_project).

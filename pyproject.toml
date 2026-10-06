@@ -1,12 +1,24 @@
 [project]
 name = "config-cli-gui"
 dynamic = ["version"]
-description = "Feature-rich Python project template for config-cli-gui."
+description = "Define configuration parameters once and get YAML/JSON config files, an argparse CLI, a Tkinter settings dialog and Markdown docs."
 authors = [
     {name = "pamagister"}
 ]
 readme = "docs/index.md"
 requires-python = ">=3.10,<3.14"
+keywords = ["configuration", "cli", "argparse", "gui", "tkinter", "settings", "yaml"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: User Interfaces",
+    "Typing :: Typed",
+]
 dependencies = [
     "pydantic>=2.11.7",
     "pyyaml>=6.0.2",
@@ -37,9 +49,14 @@ docs = [
     "pygments>=2.19.1",
 ]
 
-[project.scripts]
-config-cli-gui = "config_cli_gui.cli.cli:main"
-config-cli-gui-gui = "config_cli_gui.gui.gui:main"
+[project.urls]
+Homepage = "https://github.com/pamagister/config-cli-gui"
+Documentation = "https://config-cli-gui.readthedocs.io/"
+Issues = "https://github.com/pamagister/config-cli-gui/issues"
+Changelog = "https://github.com/pamagister/config-cli-gui/blob/main/HISTORY.md"
+
+[tool.setuptools.package-data]
+config_cli_gui = ["py.typed"]
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel", "setuptools_scm[toml]>=6.2"]

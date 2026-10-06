@@ -1,10 +1,16 @@
+import logging
 import os
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 from PIL import ImageFont
 
 from config_cli_gui.configtypes.color import Color
+
+logger = logging.getLogger("config_cli_gui")
+
+FONT_EXTENSIONS = (".ttf", ".otf", ".ttc", ".woff", ".woff2")
 
 
 def list_system_fonts() -> list[str]:
@@ -32,7 +38,7 @@ def list_system_fonts() -> list[str]:
         if d and os.path.isdir(d):
             for root, _, files in os.walk(d):
                 for f in files:
-                    if f.lower().endswith((".ttf", ".otf", ".ttc", ".woff", ".woff2")):
+                    if f.lower().endswith(FONT_EXTENSIONS):
                         full = os.path.join(root, f)
                         if full not in seen:
                             seen.add(full)
@@ -41,13 +47,32 @@ def list_system_fonts() -> list[str]:
     return fonts
 
 
+@lru_cache(maxsize=1)
+def _font_index() -> tuple[list[str], list[str], list[str]]:
+    """Scan the system fonts once, on first access."""
+    font_files = list_system_fonts()
+    font_names = sorted(os.path.basename(f) for f in font_files)
+    font_files_sorted = sorted(font_files, key=os.path.basename)
+    return font_files, font_names, font_files_sorted
+
+
+class _LazyFontList:
+    """Class attribute that triggers the font scan only when it is read."""
+
+    def __init__(self, index: int):
+        self.index = index
+
+    def __get__(self, obj: Any, owner: Any = None) -> list[str]:
+        return _font_index()[self.index]
+
+
 class Font:
     """Represents a font with type, size and color."""
 
-    # Klassenattribute nach Klassendefinition setzen
-    font_files = list_system_fonts()
-    font_names = sorted([os.path.basename(f) for f in font_files])
-    font_files_sorted = sorted(font_files, key=os.path.basename)
+    # Scanned lazily: importing this module must not walk the file system.
+    font_files = _LazyFontList(0)
+    font_names = _LazyFontList(1)
+    font_files_sorted = _LazyFontList(2)
 
     def __init__(self, font_type: str, size: float, color: "Color"):
         self.name = font_type
@@ -62,7 +87,7 @@ class Font:
         if len(font_data) < 3:
             return cls("Arial", 12, Color(0, 0, 0))
 
-        font_type, size, color_val = font_data
+        font_type, size, color_val = font_data[:3]
         color = (
             Color.from_hex(color_val) if isinstance(color_val, str) else Color.from_list(color_val)
         )
@@ -102,6 +127,15 @@ class Font:
 
         return cls(font_name, size, color)
 
+    def get_font_path(self) -> str | None:
+        """Return the file path of this font if it is installed, else None."""
+        if os.path.isfile(self.name):
+            return self.name
+        names = self.font_names
+        if self.name in names:
+            return self.font_files_sorted[names.index(self.name)]
+        return None
+
     def get_image_font(self, dpi=25.4) -> ImageFont.FreeTypeFont:
         """
         Return a PIL FreeTypeFont, with fallback to default.
@@ -110,21 +144,27 @@ class Font:
         :return:
         """
         size = self.size * dpi / 25.4
-        try:
-            if self.name in self.font_names:
-                idx = self.font_names.index(self.name)
-                path = self.font_files_sorted[idx]
-                return ImageFont.truetype(font=path, size=size)
-        except Exception as e:
-            print(f"Error loading font '{self.name}': {e}")
-            fallback_font = "Arial.ttf"
+        # Unknown names are still passed to Pillow, which searches the system font dirs itself.
+        for candidate in (self.get_font_path() or self.name, "Arial.ttf", "DejaVuSans.ttf"):
             try:
-                return ImageFont.truetype(font=fallback_font, size=size)
-            except Exception as e:
-                print(f"Error loading default fallback font '{fallback_font}': {e}")
+                return ImageFont.truetype(font=candidate, size=size)
+            except OSError as e:
+                logger.debug(f"Could not load font '{candidate}': {e}")
 
-        print("Fallback: use Default-Font.")
+        logger.warning(f"Font '{self.name}' not found, using Pillow default font.")
         return ImageFont.load_default(size=size)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Font):
+            return NotImplemented
+        return (self.name, float(self.size), self.color) == (
+            other.name,
+            float(other.size),
+            other.color,
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.name, float(self.size), self.color))
 
     def __repr__(self) -> str:
         return f"Font(type='{self.name}', size={self.size}, color={self.color!r})"
