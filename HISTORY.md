@@ -4,6 +4,13 @@ Changelog
 
 (unreleased)
 ------------
+- Major improvements, such as cli tools do not load tkinter gui anymore
+  more tests. [Paul Magister]
+
+
+0.3.9 (2026-10-02)
+------------------
+- Docs: Update HISTORY.md for release 0.3.9. [Paul Magister]
 - Improved cli doc generation: link to config.yaml. [Paul Magister]
 - Improved cli doc generation: no more python -m. [Paul Magister]
 
