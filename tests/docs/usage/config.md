@@ -1,0 +1,57 @@
+# Configuration Parameters
+
+These parameters are available to configure the behavior of your application.
+Parameters marked as CLI parameters can also be set via the command line interface.
+
+## Configuration File Reference
+
+The actual configuration is stored in [`config.yaml`](../../config.yaml). You can:
+
+- Edit the configuration file directly using your text editor
+- Use the `--config` command-line option to specify a custom config file
+
+## Category "app" {#app}
+
+| Name                   | Type | Description                                 | Default    | Choices                                                                                                                                               |
+|------------------------|------|---------------------------------------------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| date_format            | str  | Date format to use                          | '%Y-%m-%d' | -                                                                                                                                                     |
+| log_level              | str  | Logging level for the application           | 'INFO'     | ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']                                                                                                     |
+| log_file_max_size      | int  | Maximum log file size in MB before rotation | 2          | -                                                                                                                                                     |
+| enable_file_logging    | bool | Enable logging to file                      | True       | [True, False]                                                                                                                                         |
+| enable_console_logging | bool | Enable logging to console                   | True       | [True, False]                                                                                                                                         |
+| theme                  | str  | GUI theme setting supported by ttkbootstrap | 'darkly'   | ['cosmo', 'flatly', 'litera', 'minty', 'lumen', 'sandstone', 'yeti', 'pulse', 'united', 'darkly', 'superhero', 'solar', 'cyborg', 'vapor', 'simplex'] |
+
+## Category "cli" {#cli}
+
+| Name              | Type | Description                                       | Default | Choices       |
+|-------------------|------|---------------------------------------------------|---------|---------------|
+| input             | str  | Path to input (file or folder)                    | ''      | -             |
+| output            | str  | Path to output destination                        | ''      | -             |
+| min_dist          | int  | Maximum distance between two waypoints            | 20      | -             |
+| extract_waypoints | bool | Extract starting points of each track as waypoint | True    | [True, False] |
+| elevation         | bool | Include elevation data in waypoints               | False   | [True, False] |
+
+## Category "gui" {#gui}
+
+| Name              | Type   | Description                                    | Default               | Choices       |
+|-------------------|--------|------------------------------------------------|-----------------------|---------------|
+| window_width      | int    | Default window width                           | 800                   | -             |
+| window_height     | int    | Default window height                          | 600                   | -             |
+| log_window_height | int    | Height of the log window in pixels             | 200                   | -             |
+| auto_scroll_log   | bool   | Automatically scroll to the newest log entries | True                  | [True, False] |
+| max_log_lines     | int    | Maximum number of log lines to keep in GUI     | 1000                  | -             |
+| point2D           | Vector | Point in 2D space                              | Vector(7, 11)         | -             |
+| point3D           | Vector | Point in 3D space                              | Vector(1.2, 3.4, 5.6) | -             |
+
+## Category "misc" {#misc}
+
+| Name          | Type     | Description                       | Default                                                      | Choices |
+|---------------|----------|-----------------------------------|--------------------------------------------------------------|---------|
+| some_numeric  | int      | Example integer                   | 42                                                           | -       |
+| some_vector2d | Vector   | Example vector 2D                 | Vector(1, 2)                                                 | -       |
+| some_vector3d | Vector   | Example vector 3D                 | Vector(1.1, 2.2, 3.3)                                        | -       |
+| some_file     | Path     | Path to the file to use           | PosixPath('some_file.txt')                                   | -       |
+| some_color    | Color    | Color setting for the application | Color(255, 0, 0)                                             | -       |
+| some_date     | datetime | Date setting for the application  | datetime.datetime(2025, 12, 31, 10, 30, 45)                  | -       |
+| some_font     | Font     | Font setting for the application  | Font(type='DejaVuSans.ttf', size=12, color=Color(0, 0, 255)) | -       |
+

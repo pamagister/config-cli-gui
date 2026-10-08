@@ -188,9 +188,9 @@ class ConfigParameterManager(ConfigManager):  # Inherit from ConfigManager
 
 def main():
     """Main function to generate config file and documentation."""
-    default_config: str = "config.yaml"
-    default_cli_doc: str = "docs/usage/cli.md"
-    default_config_doc: str = "docs/usage/config.md"
+    default_config: str = "tests/config.yaml"
+    default_cli_doc: str = "tests/docs/usage/cli.md"
+    default_config_doc: str = "tests/docs/usage/config.md"
     _config = ConfigParameterManager()
     doc_gen = DocumentationGenerator(_config)
     doc_gen.generate_default_config_file(output_file=default_config)

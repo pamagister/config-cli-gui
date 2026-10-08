@@ -18,8 +18,7 @@ show:             ## Show the current environment.
 .PHONY: install
 install:          ## Install the project in dev mode.
 	$(MAKE) lock
-	$(MAKE) virtualenv
-	uv pip install -e .[dev,docs]
+	uv sync --all-groups
 
 .PHONY: lock
 lock:           ## builds the uv.make lock file and syncs the packages
@@ -114,14 +113,20 @@ release:          ## Create a new tag for release.
 	echo "GitHub Actions will detect the new tag and trigger the release workflows."
 	echo "Add modified files to commit and push them to main"
 
-.PHONY: docs
-docs: example-files ## Build and sync the documentation.
+.PHONY: syncdocs
+syncdocs:         ## Sync the documentation.
 	@echo "sync documentation ..."
+	@uv run ./scripts/generate_config_docs.py
 	@uv run ./scripts/update_readme.py
 	@uv run ./.github/update_funding.py
+
+.PHONY: docs
+docs:             ## Build and sync the documentation.
+	## run syncdocs
+	$(MAKE) syncdocs
 	@echo "building documentation ..."
-	@uv run mkdocs build
-	@uv run mkdocs serve
+	@uv run --group docs mkdocs build
+	@uv run --group docs mkdocs serve
 
 .PHONY: list
 list:            ## Show project file list (excluding ignored folders)

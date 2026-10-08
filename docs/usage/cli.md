@@ -1,29 +1,25 @@
 # Command Line Interface
 
-Command line options for example-app
+Command line options for your-app-name
 
 ```bash
-example-app [OPTIONS] <input>
+your-app-name [OPTIONS] input
 ```
 
 For development from a source checkout, the equivalent module invocation is:
 
 ```bash
-python -m example_app [OPTIONS] <input>
+python -m your_app_name [OPTIONS] input
 ```
 
 ## Options
 
-| Option                | Type | Description                                       | Default    | Choices       |
-|-----------------------|------|---------------------------------------------------|------------|---------------|
-| --config              | str  | Path to configuration file                        | -          | -             |
-| -v, --verbose         | bool | Enable debug logging                              | False      | [True, False] |
-| -q, --quiet           | bool | Show warnings and errors only                     | False      | [True, False] |
-| `input`               | str  | Path to input (file or folder)                    | *required* | -             |
-| `--output`            | str  | Path to output destination                        | -          | -             |
-| `--min_dist`          | int  | Maximum distance between two waypoints            | 20         | -             |
-| `--extract_waypoints` | bool | Extract starting points of each track as waypoint | True       | [True, False] |
-| `--elevation`         | bool | Include elevation data in waypoints               | False      | [True, False] |
+| Option                 | Type | Description                   | Default | Choices       |
+|------------------------|------|-------------------------------|---------|---------------|
+| --config               | str  | Path to configuration file    | -       | -             |
+| -v, --verbose          | bool | Enable debug logging          | False   | [True, False] |
+| -q, --quiet            | bool | Show warnings and errors only | False   | [True, False] |
+| `--your_cli_parameter` | int  | Example integer               | 42      | -             |
 
 
 ## Examples
@@ -32,44 +28,43 @@ python -m example_app [OPTIONS] <input>
 ### 1. Basic usage
 
 ```bash
-example-app input
+your-app-name input
 ```
 
 ### 2. With verbose logging
 
 ```bash
-example-app -v input
-example-app --verbose input
+your-app-name -v input
+your-app-name --verbose input
 ```
 
 ### 3. With quiet mode
 
 ```bash
-example-app -q input
-example-app --quiet input
+your-app-name -q input
+your-app-name --quiet input
 ```
 
-### 4. With output parameter
+### 4. With your_cli_parameter parameter
 
 ```bash
-example-app --output <output> input
-```
-
-### 5. With min_dist parameter
-
-```bash
-example-app --min_dist 20 input
-```
-
-### 6. With extract_waypoints parameter
-
-```bash
-example-app --extract_waypoints True input
+your-app-name --your_cli_parameter 42 input
 ```
 
 ### Developer usage
 
 ```bash
-python -m example_app --help
-python -m example_app input
+python -m your_app_name --help
+python -m your_app_name input
 ```
+
+    
+    # More parameter
+    
+    For your specific projects that inherit from the library, 
+    you can add more parameters to the CLI and config file 
+    by creating your own ConfigManager subclass 
+    and adding more ConfigParameter instances. 
+    The documentation generator will automatically include them 
+    in the generated documentation.
+    

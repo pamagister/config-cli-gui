@@ -11,44 +11,6 @@ app:
   enable_console_logging: true
   # GUI theme setting supported by ttkbootstrap | type=str | choices=['cosmo', 'flatly', 'litera', 'minty', 'lumen', 'sandstone', 'yeti', 'pulse', 'united', 'darkly', 'superhero', 'solar', 'cyborg', 'vapor', 'simplex']
   theme: darkly
-cli:
-  # Path to input (file or folder) | type=str | [CLI]
-  input: ''
-  # Path to output destination | type=str | [CLI]
-  output: ''
-  # Maximum distance between two waypoints | type=int | [CLI]
-  min_dist: 20
-  # Extract starting points of each track as waypoint | type=bool | [CLI] | choices=[True, False]
-  extract_waypoints: true
-  # Include elevation data in waypoints | type=bool | [CLI] | choices=[True, False]
-  elevation: false
-gui:
-  # Default window width | type=int
-  window_width: 800
-  # Default window height | type=int
-  window_height: 600
-  # Height of the log window in pixels | type=int
-  log_window_height: 200
-  # Automatically scroll to the newest log entries | type=bool | choices=[True, False]
-  auto_scroll_log: true
-  # Maximum number of log lines to keep in GUI | type=int
-  max_log_lines: 1000
-  # Point in 2D space | type=Vector
-  point2D: (7, 11)
-  # Point in 3D space | type=Vector
-  point3D: (1.2, 3.4, 5.6)
-misc:
-  # Example integer | type=int
-  some_numeric: 42
-  # Example vector 2D | type=Vector
-  some_vector2d: (1, 2)
-  # Example vector 3D | type=Vector
-  some_vector3d: (1.1, 2.2, 3.3)
-  # Path to the file to use | type=Path
-  some_file: some_file.txt
-  # Color setting for the application | type=Color
-  some_color: '#ff0000'
-  # Date setting for the application | type=datetime
-  some_date: '2025-12-31T10:30:45'
-  # Font setting for the application | type=Font
-  some_font: 'DejaVuSans.ttf, 12, #0000ff'
+Your_parameter_category:
+  # Example integer | type=int | [CLI]
+  your_cli_parameter: 42
