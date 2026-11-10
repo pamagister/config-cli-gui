@@ -128,33 +128,6 @@ docs:             ## Build and sync the documentation.
 	@uv run --group docs mkdocs build
 	@uv run --group docs mkdocs serve
 
-.PHONY: build-linux
-build-linux: clean    ## Build the Linux executable with PyInstaller.
-	uv run pyinstaller --onefile -m config_cli_gui.cli --name config-cli-gui --add-data "config.yaml:." --hidden-import config_cli_gui.cli --hidden-import config_cli_gui.gui
-	rm -rf release
-	mkdir release
-	cp dist/config-cli-gui release
-	cp config.yaml release
-	cp README.md release
-
-.PHONY: build-win
-build-win: clean    ## Build the Windows executable with PyInstaller.
-	uv run pyinstaller --onefile -m config_cli_gui.cli --name config-cli-gui --add-data "config.yaml;." --hidden-import config_cli_gui.cli --hidden-import config_cli_gui.gui
-	rm -rf release
-	mkdir release
-	cp dist/config-cli-gui.exe release
-	cp config.yaml release
-	cp README.md release
-
-.PHONY: build-macos
-build-macos: clean    ## Build the macOS executable with PyInstaller.
-	uv run pyinstaller --onefile -m config_cli_gui.cli --name config-cli-gui --add-data "config.yaml:." --hidden-import config_cli_gui.cli --hidden-import config_cli_gui.gui
-	rm -rf release
-	mkdir release
-	cp dist/config-cli-gui release
-	cp config.yaml release
-	cp README.md release
-
 .PHONY: list
 list:            ## Show project file list (excluding ignored folders)
 	@powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/show_filelist.ps1
